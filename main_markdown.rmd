@@ -36,3 +36,11 @@ simplemod2<-glm(class4~., data=npf, family=binomial(link="probit"));simplemod2
 # First level title
 ## Second level title
 ### etc.
+
+
+
+## Classification trees
+
+```{r, include=TRUE}
+source("classification_trees.R", local = knitr::knit_global())
+```
