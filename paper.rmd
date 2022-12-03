@@ -1,0 +1,48 @@
+---
+title: "IML Term project paper"
+author: "Julia Palorinne, Pyry Silomaa, Sara Sippola"
+output: pdf_document
+urlcolor: blue
+date: '`r format(Sys.Date(), "%d.%m.%Y")`'
+---
+  
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+```{r load data}
+npf <- read.csv("npf_train.csv")
+```
+
+# Introduction
+
+In this project we trained a classifier on a data set of atmospheric measurements. The task is to predict whether new particle formation (NPF) happens or not on a given day based on the atmospheric data.
+
+# Some title that covers data analysis and classifier testing & choosing
+
+## Initial data analysis
+
+The training data consists of several variables measured on 464 non-consecutive days. The variables are daily means and standard deviations of measurements such as carbon dioxide concentration, solar radiation and air temperature. Some of the variables are of the same phenomenon measured at different heights. 
+
+To understand the data, we ... (about the visualizations, what to include?) 
+
+Many classifiers are affected by correlation and collinearity between variables. As one would expect, we found that many of the variables that are of the same phenomenon are correlated, as are variables such as humidity and temperature. We take a more detailed look into this in the section *Steps we took to select good features and model parameters*.
+
+We also familiarized ourselves with the data through the [smear.avaa.scs.fi](https://smear.avaa.csc.fi/) webpage that offers further visualizations details about the data and the measurement site, and with the variable names and details available at [wiki.helsinki.fi](https://wiki.helsinki.fi/pages/viewpage.action?pageId=243959901).
+
+(The data is over non-consecutive days, ok, but are there any significant gaps e.g. a month?)
+(How many unique variables are there if we ignore the column that are just of the same variable at different heights?)
+
+## Description of considered machine learning approaches
+
+## Chosen calssifier, pros and cons of this particular classifier for this application
+
+## Steps we took to select good features and model parameters 
+
+(Should this go before the previous title? Let's see how the writing goes) 
+
+# Results
+
+## Classifier performance (numerical)
+
+## Insights, conclusions, discussion etc.
