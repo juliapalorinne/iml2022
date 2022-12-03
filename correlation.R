@@ -20,4 +20,4 @@ cm <- cor(npf)
 
 # Order variables by 1st principal component (PCA later in the course!)
 corrplot(cm, order = "FPC", tl.cex = 0.5, tl.col = "black")
-corrplot(cm, order = "FPC", tl.cex = 0.5, tl.col = "black")
+
