@@ -10,8 +10,15 @@ date: '`r format(Sys.Date(), "%d.%m.%Y")`'
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-```{r load data}
-npf <- read.csv("npf_train.csv")
+```{r load data, echo=FALSE}
+npfOrig <- read.csv("npf_train.csv")
+# Create class2
+npfOrig$class2[npfOrig$class4 == "nonevent"] <- 0
+npfOrig$class2[npfOrig$class4 != "nonevent"] <- 1
+# Add date as row name
+rownames(npfOrig) <- npfOrig[, "date"]
+# Remove columns id, date, class4, partlybad
+npfData <- npfOrig[, -(1:4)]
 ```
 
 # Introduction
@@ -24,16 +31,41 @@ In this project we trained a classifier on a data set of atmospheric measurement
 
 The training data consists of several variables measured on 464 non-consecutive days. The variables are daily means and standard deviations of measurements such as carbon dioxide concentration, solar radiation and air temperature. Some of the variables are of the same phenomenon measured at different heights. 
 
-To understand the data, we ... (about the visualizations, what to include?) 
-
-Many classifiers are affected by correlation and collinearity between variables. As one would expect, we found that many of the variables that are of the same phenomenon are correlated, as are variables such as humidity and temperature. We take a more detailed look into this in the section *Steps we took to select good features and model parameters*.
+Many classifiers are affected by correlation and colinearity between variables. As expected, we found that many of the variables describing the same phenomenon are correlated, as are variables such as humidity and temperature. We take a more detailed look into this in the section *Steps we took to select good features and model parameters*.
 
 We also familiarized ourselves with the data through the [smear.avaa.scs.fi](https://smear.avaa.csc.fi/) webpage that offers further visualizations details about the data and the measurement site, and with the variable names and details available at [wiki.helsinki.fi](https://wiki.helsinki.fi/pages/viewpage.action?pageId=243959901).
 
 (The data is over non-consecutive days, ok, but are there any significant gaps e.g. a month?)
-(How many unique variables are there if we ignore the column that are just of the same variable at different heights?)
+
+We found that there are 38 unique columns if we select measurements from only one height. We ended up selecting height 16.8 meter as some measurements were taken only at that height. Plots below describe the correlations in the original data and correlations after omitting all but the selected height.
+
+### Selecting columns by correlation
+```{r original correlation plot, echo=FALSE, fig.dim=c(7, 7), message=FALSE}
+library(corrplot)
+# Original correlations
+cmData <- cor(npfData)
+corrplot(cmData, order = "FPC", tl.cex = 0.3, tl.col = "black")
+```
+
+```{r correlation plot 168, echo=FALSE, fig.dim=c(6, 6)}
+# Select global and 16.8 m high values for correlation plot
+npf168 <- data.frame(npfOrig[, (5:6)], npfOrig[, (13:16)], npfOrig[, (27:30)], 
+                  npfOrig[, (41:42)], npfOrig[, (53:54)], npfOrig[, (63:72)],
+                  npfOrig[, (83:88)], npfOrig[, (99:105)])
+cm168 <- cor(npf168)
+corrplot(cm168, order = "FPC", tl.cex = 0.5, tl.col = "black")
+```
 
 ## Description of considered machine learning approaches
+
+```{r preprocess data, echo=FALSE}
+# Sample half of the data for training and testing sets
+set.seed(42)
+idx <- sample(nrow(npfData), nrow(npfData)/2)
+npf_train <- npfData[idx, ]
+npf_test <- npfData[-idx, ]
+```
+
 
 ## Chosen calssifier, pros and cons of this particular classifier for this application
 
