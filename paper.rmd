@@ -8,6 +8,8 @@ date: '`r format(Sys.Date(), "%d.%m.%Y")`'
   
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
+library(dplyr)
+library(kableExtra)
 ```
 
 ```{r load data, echo=FALSE}
@@ -25,27 +27,37 @@ npfData <- npfOrig[, -(1:4)]
 
 In this project we trained a classifier on a data set of atmospheric measurements. The task is to predict whether new particle formation (NPF) happens or not on a given day based on the atmospheric data.
 
-# Some title that covers data analysis and classifier testing & choosing
+# Preprocessing of the data
 
 ## Initial data analysis
 
 The training data consists of several variables measured on 464 non-consecutive days. The variables are daily means and standard deviations of measurements such as carbon dioxide concentration, solar radiation and air temperature. Some of the variables are of the same phenomenon measured at different heights. 
 
-Many classifiers are affected by correlation and colinearity between variables. As expected, we found that many of the variables describing the same phenomenon are correlated, as are variables such as humidity and temperature. We take a more detailed look into this in the section *Steps we took to select good features and model parameters*.
+Many classifiers are affected by correlation and colinearity between variables. As expected, we found that many of the variables describing the same phenomenon are correlated, as are variables related to radiation (see figure below). We take a more detailed look into this in the section *Correlation between parameters*.
 
 We also familiarized ourselves with the data through the [smear.avaa.scs.fi](https://smear.avaa.csc.fi/) webpage that offers further visualizations details about the data and the measurement site, and with the variable names and details available at [wiki.helsinki.fi](https://wiki.helsinki.fi/pages/viewpage.action?pageId=243959901).
 
 (The data is over non-consecutive days, ok, but are there any significant gaps e.g. a month?)
 
-We found that there are 38 unique columns if we select measurements from only one height. We ended up selecting height 16.8 meter as some measurements were taken only at that height. Plots below describe the correlations in the original data and correlations after omitting all but the selected height.
-
-### Selecting columns by correlation
 ```{r original correlation plot, echo=FALSE, fig.dim=c(7, 7), message=FALSE}
 library(corrplot)
 # Original correlations
 cmData <- cor(npfData)
 corrplot(cmData, order = "FPC", tl.cex = 0.3, tl.col = "black")
-```
+``` 
+
+## Correlation between parameters
+
+The initial data analysis showed that many of the parameters are correlated. For many classifiers, highly correlated parameters are problematic, and for this reason we set out to drop some of the most highly correlated columns from the data set. We know that many of the parameters are measurements of the same thing at different heights. For example, water vapour concentration (H20) has been measured at heights 4.2m, 8.4m, 16.8m, 33.6m, 50.4m and 67.2m. The correlation coefficients between the daily means at different heights are essentially 1 (see table 1).
+
+Hence we decided to discard most of the measurements of H2O and other variables for which we had multiple correlating measurements, both the means and the standard deviations. We ended up keeping the measurements measured at 16.8 meters as for some parameters, the measurements were taken only at that height. We found that after this, there are 38 unique columns. The figure below describes the correlations after omitting all but the measurements taken at the selected height.
+
+```{r H20 correlations, echo=FALSE, fig.dim=c(7, 7), message=FALSE}
+kable(cmData[startsWith(colnames(cmData), "H2O") & endsWith(colnames(cmData), ".mean"), 
+             startsWith(colnames(cmData), "H2O")  & endsWith(colnames(cmData), ".mean")],
+      caption = "Correlation (H20)") %>%
+  kable_styling(latex_options = "HOLD_position")
+``` 
 
 ```{r correlation plot 168, echo=FALSE, fig.dim=c(6, 6)}
 # Select global and 16.8 m high values for correlation plot
@@ -55,6 +67,10 @@ npf168 <- data.frame(npfOrig[, (5:6)], npfOrig[, (13:16)], npfOrig[, (27:30)],
 cm168 <- cor(npf168)
 corrplot(cm168, order = "FPC", tl.cex = 0.5, tl.col = "black")
 ```
+
+The correlation plot for the remaining parameter shows us that the remaining hihgly correlated parameters are all radiation-related.
+
+# Classifier
 
 ## Description of considered machine learning approaches
 
@@ -66,12 +82,8 @@ npf_train <- npfData[idx, ]
 npf_test <- npfData[-idx, ]
 ```
 
-
 ## Chosen calssifier, pros and cons of this particular classifier for this application
 
-## Steps we took to select good features and model parameters 
-
-(Should this go before the previous title? Let's see how the writing goes) 
 
 # Results
 
