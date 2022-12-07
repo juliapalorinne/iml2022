@@ -3,29 +3,29 @@ library(tree)
 library(ISLR2)
 
 classF <- factor(ifelse(npf$class2 < 1, "No" ,"Yes"))
-npfF <- data.frame(npf, classF)
+npfF <- data.frame(npf.168, classF)
 
 #' Select training and test data
 idx <- sample(nrow(npfF), nrow(npfF)/2)
-npf_train <- npfF[idx, ]
-npf_test <- npfF[-idx, ]
+npf_trainF <- npfF[idx, ]
+npf_testF <- npfF[-idx, ]
 classF.train <- npfF[idx, ]
 classF.test <- npfF[-idx, ]
 
 # tree.train <- tree(class2 ~ ., npf_train)
-tree.train <- tree(classF ~ . - class2, npf_train)
-summary(tree.train)
+tree.trainF <- tree(classF ~ . - class2, npf_trainF)
+summary(tree.trainF)
 
-plot(tree.train)
-text(tree.train, pretty = 0)
+plot(tree.trainF)
+text(tree.trainF, pretty = 0)
 
-tree.pred <- predict(tree.train, npf_test, type = "class")
-table(tree.pred, npf_test$classF)
+tree.pred <- predict(tree.trainF, npf_testF, type = "class")
+table(tree.pred, npf_testF$classF)
 
 set.seed(7)
-cv.train <- cv.tree(tree.train, FUN = prune.misclass)
-names(cv.train)
-cv.train
+cv.trainF <- cv.tree(tree.trainF, FUN = prune.misclass)
+names(cv.trainF)
+cv.trainF
 par(mfrow = c(1, 2))
 
 plot(cv.train$size, cv.train$dev, type = "b")
