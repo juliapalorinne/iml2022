@@ -13,12 +13,13 @@ library(kableExtra)
 ```
 
 ```{r load data}
-npf <- read.csv("npf_train.csv")
+npfOrig <- read.csv("npf_train.csv")
 ```
 
 ```{r preprocess data}
 
 # Dataset names:
+# npfOrig          - Original data with has class2 as numeric values 0, 1
 # npf          - "Original" data: has class2 with values 0,1 as numeric values, 
 #                   columns removed: class4, partlybad, date (moved to rowname)
 # npf.fact     - Otherwise the same as npf, but class2 is a factor with levels 0 and 1
@@ -31,19 +32,18 @@ npf <- read.csv("npf_train.csv")
 
 
 # Create class2, 0 = nonevent, 1 = event
-npf$class2 <- ifelse(npf$class4 == "nonevent", 0, 1)
+npfOrig$class2 <- ifelse(npfOrig$class4 == "nonevent", 0, 1)
 
 # Add date as row name
-rownames(npf) <- npf[, "date"]
+rownames(npfOrig) <- npfOrig[, "date"]
 
 # Select global and 16.8 m high values
-npf.168 <- data.frame(npf[, (5:6)], npf[, (13:16)], npf[, (27:30)], 
-                  npf[, (41:42)], npf[, (53:54)], npf[, (63:72)],
-                  npf[, (83:88)], npf[, (99:105)])
-
+npf.168 <- data.frame(npfOrig[, (5:6)], npfOrig[, (13:16)], npfOrig[, (27:30)], 
+                  npfOrig[, (41:42)], npfOrig[, (53:54)], npfOrig[, (63:72)],
+                  npfOrig[, (83:88)], npfOrig[, (99:105)])
 
 # Remove columns id, date, class4, partlybad from npf
-npf <- npf[, -(1:4)]
+npf <- npfOrig[, -(1:4)]
 
 # Create datasets where class2 is a factor
 npf.fact <- npf
@@ -423,42 +423,53 @@ kable(results,
 
 ### vif
 ```{r vif}
+library(car)
+
 testmod<-glm(class2~., npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std-RGlob.std-RGlob.mean, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std-RGlob.std-RGlob.mean-CS.mean-CS.std, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
 which(inflfact==max(inflfact))
+
 testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std-RGlob.std-RGlob.mean-CS.mean-CS.std-NOx168.mean-NOx168.std, npf.168,family=binomial(link=logit))
 inflfact<-vif(testmod)
 max(inflfact)
@@ -470,7 +481,7 @@ colnames(npf)
 npfsp<-npf.168[,c(1:2,5:6,9:10,13:16,19:20,23:24,27:30,37)]
 colnames(npfsp)
 npfsp.fact<-npfsp
-npfsp.fact[,19]<-as.factor(npfsp.fact[,19)
+npfsp.fact[,19]<-as.factor(npfsp.fact[,19])
 ```
 
 ### PCA
@@ -594,7 +605,7 @@ corrplot(cm, order = "FPC", tl.cex = 0.5, tl.col = "black")
 Looking at the numeric values, we see that the measurements at different heights have strong positive correlation.
 
 ```{r correlation at different heights, message=FALSE}
-# Korrelaatiomatriisi
+# Correlation matrix
 cm <- cor(npf[, endsWith(colnames(npf), ".mean")])
 # Remove .mean from column and row names.
 colnames(cm) <- rownames(cm) <- sapply(colnames(cm), function(s) gsub(".mean", "", s))
