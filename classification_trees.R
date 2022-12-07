@@ -102,7 +102,7 @@ errors <- sapply(models, function(model) {
   mod <- model(class2 ~ ., data = npf_train)
   c(
     c(
-      train = rmse(predict(mod, data = npf_train), npf_train$class2),
+      train = rmse(predict(mod, data = npf_train, ), npf_train$class2),
       test = rmse(predict(mod, data = npf_test), npf_test$class2),
       CV = rmse(cv(mod, data = npf_train), npf_train$class2),
       LOOCV = rmse(loocv(mod, data = npf_train), npf_train$class2) 
@@ -115,10 +115,10 @@ results <- sapply(models, function(model) {
   mod <- model(class2 ~ ., data = npf_train)
   c(
     c(
-      train = cacc(predict(mod, data = npf_train), npf_train$class2),
-      test = cacc(predict(mod, data = npf_test), npf_test$class2),
-      CV = cacc(cv(mod, data = npf_train), npf_train$class2),
-      LOOCV = cacc(loocv(mod, data = npf_train), npf_train$class2)
+      train = accuracy(predict(mod, data = npf_train), npf_train$class2),
+      test = accuracy(predict(mod, data = npf_test), npf_test$class2),
+      CV = accuracy(cv(mod, data = npf_train), npf_train$class2),
+      LOOCV = accuracy(loocv(mod, data = npf_train), npf_train$class2)
     )
   )
 })

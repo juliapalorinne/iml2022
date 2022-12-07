@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2022.11.11)  7 DEC 2022 11:34
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (TeX Live 2022/dev/Debian) (preloaded format=pdflatex 2022.11.11)  7 DEC 2022 11:43
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -470,25 +470,25 @@ File: l3backend-pdftex.def 2022-01-12 L3 backend support: PDF output (pdfTeX)
 \l__pdf_internal_box=\box72
 ) (./main_markdown.aux
 
+LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
+
+
+LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
+
+
+LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
+
+
+LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
+
+
+LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
+
+
+LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
+
+
 LaTeX Warning: Label `tab:trees' multiply defined.
-
-
-LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
-
-
-LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
-
-
-LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
-
-
-LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
-
-
-LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
-
-
-LaTeX Warning: Label `tab:correlation at different heights' multiply defined.
 
 )
 \openout1 = `main_markdown.aux'.
@@ -637,123 +637,124 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ) (/usr/share/texlive/texmf-dist/tex/latex/microtype/mt-msb.cfg
 File: mt-msb.cfg 2005/06/01 v1.0 microtype config. file: AMS symbols (b) (RS)
 )
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <10> on input line 103.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <7> on input line 103.
-LaTeX Font Info:    External font `lmex10' loaded for size
-(Font)              <5> on input line 103.
-<main_markdown_files/figure-latex/glm-1.pdf, id=4, 436.63126pt x 244.915pt>
-File: main_markdown_files/figure-latex/glm-1.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/glm-1.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/glm-1.pdf  used on in
-put line 149.
-(pdftex.def)             Requested size: 436.63019pt x 244.91438pt.
-<main_markdown_files/figure-latex/glm-2.pdf, id=5, 455.7025pt x 244.915pt>
-File: main_markdown_files/figure-latex/glm-2.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/glm-2.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/glm-2.pdf  used on in
-put line 150.
-(pdftex.def)             Requested size: 455.70831pt x 244.9181pt.
-<main_markdown_files/figure-latex/glm-3.pdf, id=6, 440.64626pt x 244.915pt>
-File: main_markdown_files/figure-latex/glm-3.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/glm-3.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/glm-3.pdf  used on in
-put line 151.
-(pdftex.def)             Requested size: 440.65862pt x 244.92184pt.
-<main_markdown_files/figure-latex/glm-4.pdf, id=7, 465.74pt x 244.915pt>
-File: main_markdown_files/figure-latex/glm-4.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/glm-4.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/glm-4.pdf  used on in
-put line 152.
-(pdftex.def)             Requested size: 465.75307pt x 244.92184pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 149--153
-[]
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 149--153
-[]
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 149--153
-[]
- []
-
-[1
-
-{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map}] [2 <./main_markdown_files/
-figure-latex/glm-1.pdf> <./main_markdown_files/figure-latex/glm-2.pdf>]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 1
-56.
-(/usr/share/texmf/tex/latex/lm/t1lmtt.fd
-File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
-) [3 <./main_markdown_files/figure-latex/glm-3.pdf> <./main_markdown_files/figu
-re-latex/glm-4.pdf>] [4]
-<main_markdown_files/figure-latex/lasso-1.pdf, id=75, 436.63126pt x 237.88875pt
->
-File: main_markdown_files/figure-latex/lasso-1.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/lasso-1.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/lasso-1.pdf  used on 
-input line 273.
-(pdftex.def)             Requested size: 436.63019pt x 237.88815pt.
-<main_markdown_files/figure-latex/lasso-2.pdf, id=76, 436.63126pt x 239.89626pt
->
-File: main_markdown_files/figure-latex/lasso-2.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/lasso-2.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/lasso-2.pdf  used on 
-input line 274.
-(pdftex.def)             Requested size: 436.63019pt x 239.89566pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 273--275
-[][]
- []
-
-[5]
-<main_markdown_files/figure-latex/ridge-1.pdf, id=81, 436.63126pt x 237.88875pt
->
-File: main_markdown_files/figure-latex/ridge-1.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/ridge-1.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/ridge-1.pdf  used on 
-input line 286.
-(pdftex.def)             Requested size: 436.63019pt x 237.88815pt.
-<main_markdown_files/figure-latex/ridge-2.pdf, id=82, 440.64626pt x 239.89626pt
->
-File: main_markdown_files/figure-latex/ridge-2.pdf Graphic file (type pdf)
-<use main_markdown_files/figure-latex/ridge-2.pdf>
-Package pdftex.def Info: main_markdown_files/figure-latex/ridge-2.pdf  used on 
-input line 287.
-(pdftex.def)             Requested size: 440.65189pt x 239.8993pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 286--288
-[][]
- []
-
-[6 <./main_markdown_files/figure-latex/lasso-1.pdf> <./main_markdown_files/figu
-re-latex/lasso-2.pdf>] [7 <./main_markdown_files/figure-latex/ridge-1.pdf> <./m
-ain_markdown_files/figure-latex/ridge-2.pdf>] [8] [9] [10]
-<main_markdown_files/figure-latex/correlation-1.pdf, id=149, 361.35pt x 322.203
-75pt>
+<main_markdown_files/figure-latex/correlation-1.pdf, id=4, 361.35pt x 322.20375
+pt>
 File: main_markdown_files/figure-latex/correlation-1.pdf Graphic file (type pdf
 )
 <use main_markdown_files/figure-latex/correlation-1.pdf>
 Package pdftex.def Info: main_markdown_files/figure-latex/correlation-1.pdf  us
-ed on input line 617.
+ed on input line 98.
 (pdftex.def)             Requested size: 361.34912pt x 322.20296pt.
-[11 <./main_markdown_files/figure-latex/correlation-1.pdf>] [12] [13] [14] (./m
-ain_markdown.aux)
+[1
+
+{/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map} <./main_markdown_files/figu
+re-latex/correlation-1.pdf>]
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <10> on input line 113.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <7> on input line 113.
+LaTeX Font Info:    External font `lmex10' loaded for size
+(Font)              <5> on input line 113.
+[2] [3]
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 3
+02.
+(/usr/share/texmf/tex/latex/lm/t1lmtt.fd
+File: t1lmtt.fd 2009/10/30 v1.6 Font defs for Latin Modern
+) [4] [5]
+<main_markdown_files/figure-latex/glm-1.pdf, id=61, 436.63126pt x 244.915pt>
+File: main_markdown_files/figure-latex/glm-1.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/glm-1.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/glm-1.pdf  used on in
+put line 550.
+(pdftex.def)             Requested size: 436.63019pt x 244.91438pt.
+<main_markdown_files/figure-latex/glm-2.pdf, id=62, 455.7025pt x 244.915pt>
+File: main_markdown_files/figure-latex/glm-2.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/glm-2.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/glm-2.pdf  used on in
+put line 551.
+(pdftex.def)             Requested size: 455.70831pt x 244.9181pt.
+<main_markdown_files/figure-latex/glm-3.pdf, id=63, 440.64626pt x 244.915pt>
+File: main_markdown_files/figure-latex/glm-3.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/glm-3.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/glm-3.pdf  used on in
+put line 552.
+(pdftex.def)             Requested size: 440.65862pt x 244.92184pt.
+<main_markdown_files/figure-latex/glm-4.pdf, id=64, 465.74pt x 244.915pt>
+File: main_markdown_files/figure-latex/glm-4.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/glm-4.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/glm-4.pdf  used on in
+put line 553.
+(pdftex.def)             Requested size: 465.75307pt x 244.92184pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 550--554
+[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 550--554
+[]
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 550--554
+[]
+ []
+
+[6] [7 <./main_markdown_files/figure-latex/glm-1.pdf> <./main_markdown_files/fi
+gure-latex/glm-2.pdf>] [8 <./main_markdown_files/figure-latex/glm-3.pdf> <./mai
+n_markdown_files/figure-latex/glm-4.pdf>] [9]
+<main_markdown_files/figure-latex/lasso-1.pdf, id=124, 436.63126pt x 237.88875p
+t>
+File: main_markdown_files/figure-latex/lasso-1.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/lasso-1.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/lasso-1.pdf  used on 
+input line 674.
+(pdftex.def)             Requested size: 436.63019pt x 237.88815pt.
+<main_markdown_files/figure-latex/lasso-2.pdf, id=125, 436.63126pt x 239.89626p
+t>
+File: main_markdown_files/figure-latex/lasso-2.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/lasso-2.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/lasso-2.pdf  used on 
+input line 675.
+(pdftex.def)             Requested size: 436.63019pt x 239.89566pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 674--676
+[][]
+ []
+
+[10]
+<main_markdown_files/figure-latex/ridge-1.pdf, id=130, 436.63126pt x 237.88875p
+t>
+File: main_markdown_files/figure-latex/ridge-1.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/ridge-1.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/ridge-1.pdf  used on 
+input line 687.
+(pdftex.def)             Requested size: 436.63019pt x 237.88815pt.
+<main_markdown_files/figure-latex/ridge-2.pdf, id=131, 440.64626pt x 239.89626p
+t>
+File: main_markdown_files/figure-latex/ridge-2.pdf Graphic file (type pdf)
+<use main_markdown_files/figure-latex/ridge-2.pdf>
+Package pdftex.def Info: main_markdown_files/figure-latex/ridge-2.pdf  used on 
+input line 688.
+(pdftex.def)             Requested size: 440.65189pt x 239.8993pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 687--689
+[][]
+ []
+
+[11 <./main_markdown_files/figure-latex/lasso-1.pdf> <./main_markdown_files/fig
+ure-latex/lasso-2.pdf>] [12 <./main_markdown_files/figure-latex/ridge-1.pdf> <.
+/main_markdown_files/figure-latex/ridge-2.pdf>] [13] (./main_markdown.aux)
 
 LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
  15069 strings out of 478287
- 240361 string characters out of 5849288
- 582711 words of memory out of 5000000
- 32863 multiletter control sequences out of 15000+600000
- 517466 words of font info for 97 fonts, out of 8000000 for 9000
+ 240378 string characters out of 5849288
+ 582712 words of memory out of 5000000
+ 32862 multiletter control sequences out of 15000+600000
+ 517549 words of font info for 98 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  74i,9n,77p,1010b,601s stack positions out of 5000i,500n,10000p,200000b,80000s
 {/usr/share/texmf/fonts/enc/dvips/lm/lm-ec.enc}</usr/share/texmf/fonts/type1/
@@ -761,10 +762,10 @@ public/lm/lmbx10.pfb></usr/share/texmf/fonts/type1/public/lm/lmbx12.pfb></usr/s
 hare/texmf/fonts/type1/public/lm/lmr10.pfb></usr/share/texmf/fonts/type1/public
 /lm/lmr12.pfb></usr/share/texmf/fonts/type1/public/lm/lmr17.pfb></usr/share/tex
 mf/fonts/type1/public/lm/lmtt10.pfb>
-Output written on main_markdown.pdf (14 pages, 475027 bytes).
+Output written on main_markdown.pdf (13 pages, 474101 bytes).
 PDF statistics:
- 292 PDF objects out of 1000 (max. 8388607)
- 234 compressed objects within 3 object streams
- 63 named destinations out of 1000 (max. 500000)
- 26822 words of extra memory for PDF output out of 29859 (max. 10000000)
+ 285 PDF objects out of 1000 (max. 8388607)
+ 228 compressed objects within 3 object streams
+ 62 named destinations out of 1000 (max. 500000)
+ 26814 words of extra memory for PDF output out of 29859 (max. 10000000)
 

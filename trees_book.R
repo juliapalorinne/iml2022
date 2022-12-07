@@ -47,3 +47,32 @@ table(tree.pred, npf_test$classF)
 
 
 
+
+# Select training and test data
+idx <- sample(nrow(npf.168.fact), nrow(npf.168.fact)/2)
+npf_trainF168 <- npf.168.fact[idx, ]
+npf_testF168 <- npf.168.fact[-idx, ]
+classF.train <- classF[idx, ]
+classF.test <- classF[-idx, ]
+
+# tree.train <- tree(class2 ~ ., npf_train)
+tree.trainF168 <- tree(class2~., npf_trainF168)
+summary(tree.trainF168)
+
+par(mfrow = c(1, 2))
+plot(tree.trainF)
+text(tree.trainF, pretty = 0)
+plot(tree.trainF168)
+text(tree.trainF168, pretty = 0)
+
+prune.trainF168 <- prune.misclass(tree.trainF168, best = 8)
+plot(prune.trainF168)
+# text(prune.train, pretty = 0)
+tree.predF168 <- predict(prune.trainF168, npf_testF168, type = "class")
+table(tree.predF168, npf_testF168$class2)
+
+mean(tree.predF168 == npf_testF168$class2)
+
+LOOCV.tree = loocv(prune.train, data=npf_test)
+LOOCV.tree
+
