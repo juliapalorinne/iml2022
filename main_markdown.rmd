@@ -65,21 +65,23 @@ rmse <- function(yhat, y) sqrt(mean((y - yhat)**2))
 ## Classification accuracy
 cacc <- function(pred, true) sum(as.integer(as.logical(pred == true)))/length(pred)
 
-## accuracy
+## Accuracy
 accuracy <- function(pred, y) mean(ifelse(pred >= 0.5, 1, 0) == y)
 
-## perplexity. Force probabilities to [0.995, 0.005]
-perplexity <- function(pred, y){
+## Perplexity
+## Force probabilities to [0.995, 0.005]
+perplexity <- function(pred, y) {
   pred <- ifelse(pred != 0 & pred != 1, pred, ifelse(pred == 0, 0.005, 0.995 ))
-  exp(-mean(log(ifelse(y == 1, pred, 1 - pred)))) }
+  exp(-mean(log(ifelse(y == 1, pred, 1 - pred)))) 
+}
 
-# cross-validate
-# split n items into k folds of roughly equal size
+# Cross-validate
+# Split n items into k folds of roughly equal size
 kpart <- function(n, k) {
     rep_len(1:k, length.out = n)
 }
 
-# Cross-validation predictor (from week 1 problem 2)¨
+# Cross-validation predictor (from week 1 problem 2)
 cv <- function(
     formula, # variables to use
     data, # data
@@ -134,7 +136,8 @@ cv.prob <- function(
                ## function to train a model on data
                train = function(data) model(formula, data = data),
                ## function to make predictions on the trained model
-               pred = function(model, data) predict(model, newdata = data, type = "raw")[,2]) {
+               pred = function(model, data) 
+                 predict(model, newdata = data, type = "raw")[,2]) {
     yhat <- NULL
     for (i in 1:k) {
         ## go through all folds, train on other folds, and make a prediction
@@ -156,7 +159,8 @@ loocv.prob <- function(
                ## function to train a model on data
                train = function(data) model(formula, data = data),
                ## function to make predictions on the trained model
-               pred = function(model, data) predict(model, newdata = data, type = "raw")[,2]) {
+               pred = function(model, data) 
+                 predict(model, newdata = data, type = "raw")[,2]) {
     yhat <- NULL
     for (i in 1:nrow(data)) {
         ## go through all stations, train on other stations, and make a prediction
@@ -197,11 +201,12 @@ corrplot(cm, order = "FPC", tl.cex = 0.5, tl.col = "black")
 
 Looking at the numeric values, we see that the measurements at different heights have strong positive correlation.
 
-```{r correlation at different heights, message=FALSE}
+```{r correlation at different heights, message=FALSE, warning=FALSE}
 # Correlation matrix
 cm <- cor(npf[, endsWith(colnames(npf), ".mean")])
 # Remove .mean from column and row names.
-colnames(cm) <- rownames(cm) <- sapply(colnames(cm), function(s) gsub(".mean", "", s))
+colnames(cm) <- rownames(cm) <- sapply(colnames(cm), 
+                                       function(s) gsub(".mean", "", s))
 # Correlations for each variables (when more than one variable with the same beginning)
 kable(cm[startsWith(colnames(cm), "CO2"), startsWith(colnames(cm), "CO2")],
       caption = "Correlation (CO2)") %>%
@@ -232,392 +237,679 @@ kable(cm[startsWith(colnames(cm), "T"), startsWith(colnames(cm), "T")],
 
 The measurement height 16.8m is the only one with all measurements. Because of this and the correlation between the measurements at different heights, we choose to discard measurements from heights other than 16.8m.
 
-```{r measurementHeights, message=FALSE}
+```{r measurementHeights, message=FALSE, warning=FALSE}
 # Selecting which measurements have been done at particular heights
 # Columns
-cols <- unname(sapply(colnames(npf[endsWith(colnames(npf), ".mean")]), function(s) gsub(".mean", "", s)))
+cols <- unname(sapply(colnames(npf[endsWith(colnames(npf), ".mean")]), 
+                      function(s) gsub(".mean", "", s)))
 # Table of variables at different heights (only the variables that have been measured at different heights)
-kable(data.frame(dm.42 = c(sort(cols[endsWith(cols, "42")])[1:6], NA, sort(cols[endsWith(cols, "42")])[7]),
-                                dm.84 = c(NA, sort(cols[endsWith(cols, "84")])[1:5], NA, sort(cols[endsWith(cols, "84")])[6]),
-                                dm.168 = c(sort(cols[endsWith(cols, "168")])),
-                                dm.336 = c(sort(cols[endsWith(cols, "336")])[1:4], NA, sort(cols[endsWith(cols, "336")])[5], NA, NA),
-                                dm.504 = c(sort(cols[endsWith(cols, "504")])[1:6], NA, sort(cols[endsWith(cols, "504")])[7]),
-                                dm.672 = c(NA, NA, sort(cols[endsWith(cols, "672")])[2:5], NA, sort(cols[endsWith(cols, "672")])[6])),
-      caption = "Measurements at different heights: What measurements have been done at particular heights?") %>%
-
+kable(data.frame(dm.42 = 
+                   c(sort(cols[endsWith(cols, "42")])[1:6], NA, 
+                     sort(cols[endsWith(cols, "42")])[7]), 
+                 dm.84 = c(NA, sort(cols[endsWith(cols, "84")])[1:5], NA, 
+                           sort(cols[endsWith(cols, "84")])[6]),
+                 dm.168 = c(sort(cols[endsWith(cols, "168")])),
+                 dm.336 = c(sort(cols[endsWith(cols, "336")])[1:4], NA, 
+                            sort(cols[endsWith(cols, "336")])[5], NA, NA),
+                 dm.504 = c(sort(cols[endsWith(cols, "504")])[1:6], NA, 
+                            sort(cols[endsWith(cols, "504")])[7]),
+                 dm.672 = c(NA, NA, sort(cols[endsWith(cols, "672")])[2:5], NA,
+                            sort(cols[endsWith(cols, "672")])[6])),
+      caption = "Measurements at different heights: What measurements have been done at particular heights?") %>% 
   kable_styling(latex_options = "HOLD_position")
 ```
 
 ### vif
-```{r vif}
+```{r vif, warning=FALSE}
 library(car)
 
-testmod<-glm(class2~., npf.168,family=binomial(link=logit))
-inflfact<-vif(testmod)
-max(inflfact)
-which(inflfact==max(inflfact))
-
-testmod<-glm(class2~.-PAR.mean-PAR.std, npf.168,family=binomial(link=logit))
-inflfact<-vif(testmod)
-max(inflfact)
-which(inflfact==max(inflfact))
-
-testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean, npf.168,family=binomial(link=logit))
-inflfact<-vif(testmod)
-max(inflfact)
-which(inflfact==max(inflfact))
-
-testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean, npf.168,family=binomial(link=logit))
-inflfact<-vif(testmod)
-max(inflfact)
-which(inflfact==max(inflfact))
-
-testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean, npf.168,family=binomial(link=logit))
-inflfact<-vif(testmod)
-max(inflfact)
-which(inflfact==max(inflfact))
-
-testmod<-glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std, npf.168,family=binomial(link=logit))
-inflfact<-vif(testmod)
-max(inflfact)
-which(inflfact==max(inflfact))
-
-testmod <- glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std, npf.168,family=binomial(link=logit))
+testmod <- glm(class2 ~ ., npf.168, family = binomial(link = logit))
 inflfact <- vif(testmod)
 max(inflfact)
 which(inflfact == max(inflfact))
 
-testmod <- glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std-RGlob.std-RGlob.mean, npf.168,family=binomial(link=logit))
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std, npf.168, 
+               family = binomial(link = logit))
 inflfact <- vif(testmod)
 max(inflfact)
 which(inflfact == max(inflfact))
 
-testmod <- glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std-RGlob.std-RGlob.mean-CS.mean-CS.std, npf.168,family=binomial(link=logit))
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean, npf.168, 
+               family = binomial(link = logit))
 inflfact <- vif(testmod)
 max(inflfact)
 which(inflfact == max(inflfact))
 
-testmod <- glm(class2~.-PAR.mean-PAR.std-UV_A.std-UV_A.mean-Glob.std-Glob.mean-UV_B.std-UV_B.mean-RPAR.mean-RPAR.std-NET.mean-NET.std-RGlob.std-RGlob.mean-CS.mean-CS.std-NOx168.mean-NOx168.std, npf.168,family=binomial(link=logit))
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean -Glob.std 
+               -Glob.mean, npf.168, family = binomial(link = logit))
 inflfact <- vif(testmod)
 max(inflfact)
-which(inflfact==max(inflfact))
+which(inflfact == max(inflfact))
+
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean -Glob.std 
+               -Glob.mean -UV_B.std -UV_B.mean, npf.168, 
+               family = binomial(link = logit))
+inflfact <- vif(testmod)
+max(inflfact)
+which(inflfact == max(inflfact))
+
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean -Glob.std
+               -Glob.mean -UV_B.std -UV_B.mean -RPAR.mean -RPAR.std, npf.168, 
+               family = binomial(link = logit))
+inflfact <- vif(testmod)
+max(inflfact)
+which(inflfact == max(inflfact))
+
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean -Glob.std 
+               -Glob.mean -UV_B.std -UV_B.mean -RPAR.mean -RPAR.std -NET.mean 
+               -NET.std,  npf.168, family = binomial(link = logit))
+inflfact <- vif(testmod)
+max(inflfact)
+which(inflfact == max(inflfact))
+
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean -Glob.std 
+               -Glob.mean -UV_B.std -UV_B.mean -RPAR.mean -RPAR.std -NET.mean 
+               -NET.std -RGlob.std -RGlob.mean, npf.168, 
+               family = binomial(link = logit))
+inflfact <- vif(testmod)
+max(inflfact)
+which(inflfact == max(inflfact))
+
+testmod <- glm(class2 ~ . -PAR.mean -PAR.std -UV_A.std -UV_A.mean 
+               -Glob.std -Glob.mean -UV_B.std -UV_B.mean -RPAR.mean -RPAR.std 
+               -NET.mean -NET.std -RGlob.std -RGlob.mean -CS.mean -CS.std, 
+               npf.168, family = binomial(link = logit))
+inflfact <- vif(testmod)
+max(inflfact)
+which(inflfact == max(inflfact))
+
+testmod <- glm(class2~. -PAR.mean -PAR.std -UV_A.std -UV_A.mean -Glob.std 
+               -Glob.mean -UV_B.std -UV_B.mean -RPAR.mean -RPAR.std -NET.mean 
+               -NET.std -RGlob.std -RGlob.mean -CS.mean -CS.std -NOx168.mean 
+               -NOx168.std, npf.168,family = binomial(link = logit))
+inflfact <- vif(testmod)
+max(inflfact)
+which(inflfact == max(inflfact))
 ```
 
-Runnig vif() over several variables in the 16.8m-restricted dataset, we come up to the following collection of coefficients 
-```{r vif coefficients}
+Runnig vif() over several variables in the 16.8m restricted dataset, we come up to the following collection of coefficients 
+```{r vif coefficients, warning=FALSE}
 coefficients(testmod)
 ```
 
 Hence we keep the following parameters
-```{r vif parameters}
-npfsp <- npf.168[,c(1:2,5:6,9:10,13:16,19:20,23:24,27:30,37)]
+```{r vif parameters, warning=FALSE}
+npfsp <- npf.168[, c(1:2, 5:6, 9:10, 13:16, 19:20, 23:24, 27:30, 37)]
 colnames(npfsp)
 npfsp.fact <- npfsp
-npfsp.fact[,19] <- as.factor(npfsp.fact[,19])
+npfsp.fact[, 19] <- as.factor(npfsp.fact[, 19])
 ```
 
 ### PCA
 #### PCA for all three versions of data 
-```{r PCA}
-pcaOrig <- prcomp(npf[,1:100], center = T, scale.=T)
+```{r PCA, warning=FALSE}
+pcaOrig <- prcomp(npf[, 1:100], center = T, scale. = T)
 cumsum(pcaOrig$sdev^2)/sum(pcaOrig$sdev^2)
-x1 <- as.matrix(npf[,1:100])%*%pcaOrig$rotation[,1:12]
-pca.168 <- prcomp(npf.168[,1:36], center = T, scale. = T)
+x1 <- as.matrix(npf[, 1:100]) %*% pcaOrig$rotation[, 1:12]
+pca.168 <- prcomp(npf.168[, 1:36], center = T, scale. = T)
 cumsum(pca.168$sdev^2)/sum(pca.168$sdev^2)
-x2 <- as.matrix(npf.168[,1:36])%*%pca.168$rotation[,1:12]
-pca.sp <- prcomp(npfsp[,1:18], center = T, scale. = T)
+x2 <- as.matrix(npf.168[, 1:36]) %*% pca.168$rotation[, 1:12]
+pca.sp <- prcomp(npfsp[, 1:18], center = T, scale. = T)
 cumsum(pca.sp$sdev^2)/sum(pca.sp$sdev^2)
-x3 <- as.matrix(npfsp[,1:18])%*%pca.sp$rotation[,1:11]
+x3 <- as.matrix(npfsp[, 1:18]) %*% pca.sp$rotation[, 1:11]
+
+npf.pca <- as.data.frame(cbind(x1, npf$class2))
+colnames(npf.pca) <- c(colnames(x1), "class2")
+npf.168.pca <- as.data.frame(cbind(x2, npf.168$class2))
+colnames(npf.168.pca) <- c(colnames(x2), "class2")
 ```
 
 # Classifiers
 
-## Testing classifiers as they are
+## Naive Bayes, LDA and QDA on the original data, 168-data and the PCA'd versions of these data sets
 
 ### Naive Bayes
 
-```{r naive bayes}
+```{r naive bayes, warning=FALSE}
 library(e1071)
-nb.fit <- naiveBayes(class2 ~ . , data = npf_train, laplace = 1)
-nb.pred.cv <- cv.prob(class2 ~ ., npf, naiveBayes) # Hidas prosessi, tehdään siksi vaan kerran
 
-nb_acc <- data.frame(train = accuracy(predict(nb.fit, newdata = npf_train, type = "raw")[,2], npf_train$class2),
-                     test = accuracy(predict(nb.fit, newdata = npf_test, type = "raw")[,2], npf_test$class2),
-                     CV = accuracy(nb.pred.cv, npf$class2))
-# Kaikkiin tulee Inf
-nb_perp <- data.frame(train = perplexity(predict(nb.fit, newdata = npf_train, type = "raw")[,2], npf_train$class2),
-                      test = perplexity(predict(nb.fit, newdata = npf_test, type = "raw")[,2], npf_test$class2),
-                      CV = perplexity(nb.pred.cv, npf$class2))
-kable(cbind(nb_acc,
-            nb_perp)) %>%
-  add_header_above(c("Accuracy" = 3, "Perplexity" = 3)) %>%
+# Original data
+nb.fit <- naiveBayes(class2 ~ . , data = npf_train)
+nb.pred.cv <- cv.prob(class2 ~ ., npf, naiveBayes)       # Very slow so done only once
+nb.pred.loocv <- loocv.prob(class2 ~ ., npf, naiveBayes) # Same as above
+
+nb_acc <- data.frame(
+  train = accuracy(predict(nb.fit, newdata = npf_train, 
+                           type = "raw")[, 2], npf_train$class2),
+  test = accuracy(predict(nb.fit, newdata = npf_test, 
+                          type = "raw")[, 2], npf_test$class2),
+  CV = accuracy(nb.pred.cv, npf$class2),
+  LOOCV = accuracy(nb.pred.loocv, npf$class2))
+
+nb_perp <- data.frame(
+  train = perplexity(predict(nb.fit, newdata = npf_train, 
+                             type = "raw")[, 2], npf_train$class2),
+  test = perplexity(predict(nb.fit, newdata = npf_test, 
+                            type = "raw")[, 2], npf_test$class2),
+  CV = perplexity(nb.pred.cv, npf$class2),
+  LOOCV = perplexity(nb.pred.loocv, npf$class2))
+kable(cbind(nb_acc, nb_perp)) %>%
+  add_header_above(c("Accuracy" = 4, "Perplexity" = 4)) %>%
   kable_styling(latex_options = "HOLD_position")
+
+# 168-data
+nb.pred.cv.168 <- cv.prob(class2 ~ ., npf.168, naiveBayes)       # Very slow so done only once
+nb.pred.loocv.168 <- loocv.prob(class2 ~ ., npf.168, naiveBayes) # Same as above
+
+nb_acc.168 <- data.frame(CV = accuracy(nb.pred.cv.168, npf.168$class2),
+                        LOOCV = accuracy(nb.pred.loocv.168, npf.168$class2))
+
+nb_perp.168 <- data.frame(CV = perplexity(nb.pred.cv.168, npf.168$class2),
+                          LOOCV = perplexity(nb.pred.loocv.168, npf.168$class2))
+kable(cbind(nb_acc.168, nb_perp.168)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+
+```
+
+Using PCA on the original and the 16.8m dataset.
+
+```{r naive bayes pca, warning=FALSE}
+
+# Original data
+nb.pred.cv.pca <- cv.prob(class2 ~ ., npf.pca, naiveBayes)       # Very slow so done only once
+nb.pred.loocv.pca <- loocv.prob(class2 ~ ., npf.pca, naiveBayes) # Same as above
+
+nb_acc.pca <- data.frame(CV = accuracy(nb.pred.cv.pca, npf.pca$class2),
+                         LOOCV = accuracy(nb.pred.loocv.pca, npf.pca$class2))
+
+nb_perp.pca <- data.frame(CV = perplexity(nb.pred.cv.pca, npf.pca$class2),
+                          LOOCV = perplexity(nb.pred.loocv.pca, npf.pca$class2))
+kable(cbind(nb_acc.pca, nb_perp.pca)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+# 168-data
+nb.pred.cv.168.pca <- cv.prob(class2 ~ ., npf.168.pca, naiveBayes)       # Very slow so done only once
+nb.pred.loocv.168.pca <- loocv.prob(class2 ~ ., npf.168.pca, naiveBayes) # Same as above
+
+nb_acc.168.pca <- data.frame(CV = accuracy(nb.pred.cv.168, npf.168.pca$class2),
+                     LOOCV = accuracy(nb.pred.loocv.168, npf.168.pca$class2))
+
+nb_perp.168.pca <- data.frame(CV = perplexity(nb.pred.cv.168, npf.168.pca$class2),
+                      LOOCV = perplexity(nb.pred.loocv.168, npf.168.pca$class2))
+kable(cbind(nb_acc.168.pca, nb_perp.168.pca)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
 ```
 
 ### LDA
-```{r lda}
+
+On the original dataset and the 16.8m dataset.
+```{r lda, warning=FALSE}
 library(MASS)
-lda.fit <- lda(class2 ~ . , data = npf_train)
-# Cross-validation parametrit
-n = nrow(npf) # number of rows in the data matrix
-k = min(n, 10) # number of cross-validation folds
+
+# Cross-validation parameters
+n = nrow(npf)       # number of rows in the data matrix
+k = min(n, 10)      # number of cross-validation folds
 split = kpart(n, k) # the split of n data items into k folds
+
 lda.pred.cv <- rep(0,n)
+lda.pred.cv.168 <- rep(0,n)
 
 # cv
 for (i in 1:k) {
   ## go through all folds, train on other folds, and make a prediction
   mod <- lda(class2 ~ ., npf[split != i, ])
   lda.pred.cv[split == i] <- predict(mod, npf[split == i, ])$posterior[,2]
+  ## 168
+  mod <- lda(class2 ~ ., npf.168[split != i, ])
+  lda.pred.cv.168[split == i] <- predict(mod, npf.168[split == i, ])$posterior[,2]
 }
-lda_acc <- data.frame(train = accuracy(predict(lda.fit, newdata = npf_train)$posterior[,2], npf_train$class2),
-                      test = accuracy(predict(lda.fit, newdata = npf_train)$posterior[,2], npf_test$class2),
-                      CV = accuracy(lda.pred.cv, npf$class2))
-lda_perp <- data.frame(train = perplexity(predict(lda.fit, newdata = npf_train)$posterior[,2], npf_train$class2),
-                      test = perplexity(predict(lda.fit, newdata = npf_train)$posterior[,2], npf_test$class2),
-                      CV = perplexity(lda.pred.cv, npf$class2))
+
+lda.pred.loocv <- rep(0, n)
+lda.pred.loocv.168 <- rep(0, n)
+
+# loocv
+for (i in 1:dim(npf)[1]) {
+  mod <- lda(class2 ~ ., npf[-i, ])
+  lda.pred.loocv[i] <- predict(mod, npf[i, ])$posterior[,2]
+  ## 168
+  mod <- lda(class2 ~ ., npf.168[-i, ])
+  lda.pred.loocv.168[i] <- predict(mod, npf.168[i, ])$posterior[,2]
+}
+
+# npf
+lda_acc <- data.frame(CV = accuracy(lda.pred.cv, npf$class2),
+                      LOOCV = accuracy(lda.pred.loocv, npf$class2))
+lda_perp <- data.frame(CV = perplexity(lda.pred.cv, npf$class2),
+                       LOOCV = perplexity(lda.pred.loocv, npf$class2))
 kable(cbind(lda_acc,
             lda_perp)) %>%
-  add_header_above(c("Accuracy" = 3, "Perplexity" = 3))%>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+# 168
+lda_acc.168 <- data.frame(CV = accuracy(lda.pred.cv.168, npf$class2),
+                          LOOCV = accuracy(lda.pred.loocv.168, npf$class2))
+lda_perp.168 <- data.frame(CV = perplexity(lda.pred.cv.168, npf$class2),
+                           LOOCV = perplexity(lda.pred.loocv.168, npf$class2))
+kable(cbind(lda_acc.168, lda_perp.168)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+Using PCA on the original and the 16.8m dataset.
+
+```{r lda pca, warning=FALSE}
+
+# Cross-validation parametrit
+n = nrow(npf)       # number of rows in the data matrix
+k = min(n, 10)      # number of cross-validation folds
+split = kpart(n, k) # the split of n data items into k folds
+
+lda.pred.cv.pca <- rep(0,n)
+lda.pred.cv.168.pca <- rep(0,n)
+
+# cv
+for (i in 1:k) {
+  ## go through all folds, train on other folds, and make a prediction
+  mod <- lda(class2 ~ ., npf.pca[split != i, ])
+  lda.pred.cv.pca[split == i] <- predict(mod, npf.pca[split == i, ])$posterior[,2]
+  ## 168
+  mod <- lda(class2 ~ ., npf.168.pca[split != i, ])
+  lda.pred.cv.168.pca[split == i] <- predict(mod, npf.168.pca[split == i, ])$posterior[,2]
+}
+
+lda.pred.loocv.pca <- rep(0, n)
+lda.pred.loocv.168.pca <- rep(0, n)
+
+# loocv
+for (i in 1:dim(npf)[1]) {
+  mod <- lda(class2 ~ ., npf.pca[-i, ])
+  lda.pred.loocv.pca[i] <- predict(mod, npf.pca[i, ])$posterior[, 2]
+  ## 168
+  mod <- lda(class2 ~ ., npf.168.pca[-i, ])
+  lda.pred.loocv.168.pca[i] <- predict(mod, npf.168.pca[i, ])$posterior[, 2]
+}
+
+# npf
+lda_acc.pca <- data.frame(CV = accuracy(lda.pred.cv.pca, npf.pca$class2),
+                          LOOCV = accuracy(lda.pred.loocv.pca, npf.pca$class2))
+lda_perp.pca <- data.frame(CV = perplexity(lda.pred.cv.pca, npf.pca$class2),
+                           LOOCV = perplexity(lda.pred.loocv.pca, npf.pca$class2))
+kable(cbind(lda_acc.pca, lda_perp.pca)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+# 168
+lda_acc.168.pca <- data.frame(CV = accuracy(lda.pred.cv.168.pca, 
+                                            npf.168.pca$class2),
+                              LOOCV = accuracy(lda.pred.loocv.168.pca, 
+                                               npf.168.pca$class2))
+lda_perp.168.pca <- data.frame(CV = perplexity(lda.pred.cv.168.pca, 
+                                               npf.168.pca$class2),
+                               LOOCV = perplexity(lda.pred.loocv.168.pca, 
+                                                  npf.168.pca$class2))
+kable(cbind(lda_acc.168.pca, lda_perp.168.pca)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2) )%>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
 ### QDA
-```{r qda}
+```{r qda, warning=FALSE}
 library(MASS)
-qda.fit <- qda(class2 ~ . , data = npf_train)
+
 # Cross-validation parametrit
-n = nrow(npf) # number of rows in the data matrix
-k = min(n, 10) # number of cross-validation folds
+n = nrow(npf)       # number of rows in the data matrix
+k = min(n, 10)      # number of cross-validation folds
 split = kpart(n, k) # the split of n data items into k folds
-qda.pred.cv <- rep(0,n)
+
+qda.pred.cv <- rep(0, n)
+qda.pred.cv.168 <- rep(0, n)
 
 # cv
 for (i in 1:k) {
   ## go through all folds, train on other folds, and make a prediction
   mod <- qda(class2 ~ ., npf[split != i, ])
-  qda.pred.cv[split == i] <- predict(mod, npf[split == i, ])$posterior[,2]
+  qda.pred.cv[split == i] <- predict(mod, npf[split == i, ])$posterior[, 2]
+  ## 168
+  mod <- qda(class2 ~ ., npf.168[split != i, ])
+  qda.pred.cv.168[split == i] <- predict(mod, npf.168[split == i, ])$posterior[, 2]
 }
-qda_acc <- data.frame(train = accuracy(predict(qda.fit, newdata = npf_train)$posterior[,2], npf_train$class2),
-                      test = accuracy(predict(qda.fit, newdata = npf_train)$posterior[,2], npf_test$class2),
-                      CV = accuracy(qda.pred.cv, npf$class2))
-# Taas Inf :(
-qda_perp <- data.frame(train = perplexity(predict(qda.fit, newdata = npf_train)$posterior[,2], npf_train$class2),
-                      test = perplexity(predict(qda.fit, newdata = npf_train)$posterior[,2], npf_test$class2),
-                      CV = perplexity(qda.pred.cv, npf$class2))
-kable(cbind(qda_acc,
-            qda_perp)) %>%
-  add_header_above(c("Accuracy" = 3, "Perplexity" = 3)) %>%
+
+qda.pred.loocv <- rep(0, n)
+qda.pred.loocv.168 <- rep(0, n)
+
+# loocv
+for (i in 1:dim(npf)[1]) {
+  mod <- qda(class2 ~ ., npf[-i, ])
+  qda.pred.loocv[i] <- predict(mod, npf[i, ])$posterior[, 2]
+  ## 168
+  mod <- qda(class2 ~ ., npf.168[-i, ])
+  qda.pred.loocv.168[i] <- predict(mod, npf.168[i, ])$posterior[, 2]
+}
+
+# npf
+qda_acc <- data.frame(CV = accuracy(qda.pred.cv, npf$class2),
+                      LOOCV = accuracy(qda.pred.loocv, npf$class2))
+qda_perp <- data.frame(CV = perplexity(qda.pred.cv, npf$class2),
+                       LOOCV = perplexity(qda.pred.loocv, npf$class2))
+kable(cbind(qda_acc, qda_perp)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+# 168
+qda_acc.168 <- data.frame(CV = accuracy(qda.pred.cv.168, npf$class2),
+                          LOOCV = accuracy(qda.pred.loocv.168, npf$class2))
+qda_perp.168 <- data.frame(CV = perplexity(qda.pred.cv.168, npf$class2),
+                           LOOCV = perplexity(qda.pred.loocv.168, npf$class2))
+kable(cbind(qda_acc.168, qda_perp.168)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
   kable_styling(latex_options = "HOLD_position")
 ```
 
+Using PCA on the original and the 16.8m dataset.
+
+```{r qda pca, warning=FALSE}
+
+# Cross-validation parameters
+n = nrow(npf)       # number of rows in the data matrix
+k = min(n, 10)      # number of cross-validation folds
+split = kpart(n, k) # the split of n data items into k folds
+
+qda.pred.cv.pca <- rep(0, n)
+qda.pred.cv.168.pca <- rep(0, n)
+
+# cv
+for (i in 1:k) {
+  ## go through all folds, train on other folds, and make a prediction
+  mod <- qda(class2 ~ ., npf.pca[split != i, ])
+  qda.pred.cv.pca[split == i] <- predict(mod, npf.pca[split == i, ])$posterior[, 2]
+  ## 168
+  mod <- qda(class2 ~ ., npf.168.pca[split != i, ])
+  qda.pred.cv.168.pca[split == i] <- 
+    predict(mod, npf.168.pca[split == i, ])$posterior[, 2]
+}
+
+qda.pred.loocv.pca <- rep(0, n)
+qda.pred.loocv.168.pca <- rep(0, n)
+
+# loocv
+for (i in 1:dim(npf)[1]) {
+  mod <- qda(class2 ~ ., npf.pca[-i, ])
+  qda.pred.loocv.pca[i] <- predict(mod, npf.pca[i, ])$posterior[, 2]
+  ## 168
+  mod <- qda(class2 ~ ., npf.168.pca[-i, ])
+  qda.pred.loocv.168.pca[i] <- predict(mod, npf.168.pca[i, ])$posterior[, 2]
+}
+
+# npf
+qda_acc.pca <- data.frame(CV = accuracy(qda.pred.cv.pca, npf.pca$class2),
+                          LOOCV = accuracy(qda.pred.loocv.pca, npf.pca$class2))
+qda_perp.pca <- data.frame(CV = perplexity(qda.pred.cv.pca, npf.pca$class2),
+                           LOOCV = perplexity(qda.pred.loocv.pca, npf.pca$class2))
+kable(cbind(qda_acc.pca, qda_perp.pca)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+# 168
+qda_acc.168.pca <- data.frame(CV = accuracy(qda.pred.cv.168.pca,
+                                            npf.168.pca$class2),
+                              LOOCV = accuracy(qda.pred.loocv.168.pca, 
+                                               npf.168.pca$class2))
+qda_perp.168.pca <- data.frame(CV = perplexity(qda.pred.cv.168.pca, 
+                                               npf.168.pca$class2),
+                               LOOCV = perplexity(qda.pred.loocv.168.pca, 
+                                                  npf.168.pca$class2))
+kable(cbind(qda_acc.168.pca, qda_perp.168.pca)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+## Multiple classes
+
+### Naive Bayes on the npf-dataset
+
+```{r naive bayes multiclass, warning=FALSE, fig.height=4}
+
+# Use class4 instead of class2
+npf.class4 <- npf[, 1:100]
+npf.class4$class4 <- npfOrig$class4
+
+
+multinb.pred.loocv <- rep(0, nrow(npf.class4))
+
+# loocv
+for (i in 1:dim(npf.class4)[1]) {
+  mod <- naiveBayes(class4 ~ ., npf.class4[-i, ])
+  multinb.pred.loocv[i] <- predict(mod, npf.class4[i, ])
+}
+
+multinb.pred.loocv[multinb.pred.loocv == 1] <- "Ia"
+multinb.pred.loocv[multinb.pred.loocv == 2] <- "Ib"
+multinb.pred.loocv[multinb.pred.loocv == 3] <- "II"
+multinb.pred.loocv[multinb.pred.loocv == 4] <- "nonevent"
+
+mean(as.numeric(multinb.pred.loocv == npf.class4$class4))
+```
+### LDA on the npf.168-dataset
+
+```{r lda multiclass, warning=FALSE, fig.height=4}
+
+# Use class4 instead of class2
+npf.168.class4 <- npf.168[, 1:36]
+npf.168.class4$class4 <- npfOrig$class4
+
+
+multilda.pred.loocv <- rep(0, nrow(npf.168.class4))
+
+# loocv
+for (i in 1:dim(npf.168.class4)[1]) {
+  mod <- lda(class4 ~ ., npf.168.class4[-i, ])
+  multilda.pred.loocv[i] <- predict(mod, npf.168.class4[i, ])$class
+}
+
+multilda.pred.loocv[multilda.pred.loocv == 1] <- "Ia"
+multilda.pred.loocv[multilda.pred.loocv == 2] <- "Ib"
+multilda.pred.loocv[multilda.pred.loocv == 3]
+
+mean(as.numeric(multilda.pred.loocv == npf.168.class4$class4))
+```
+
+### QDA on the npf.pca-dataset
+
+```{r qda multiclass, warning=FALSE, fig.height=4}
+
+# Use class4 instead of class2
+npf.pca.class4 <- npf.pca[, 1:12]
+npf.pca.class4$class4 <- npfOrig$class4
+
+multiqda.pred.loocv <- rep(0, nrow(npf.pca.class4))
+
+# loocv
+for (i in 1:dim(npf.pca.class4)[1]) {
+  mod <- qda(class4 ~ ., npf.pca.class4[-i, ])
+  multiqda.pred.loocv[i] <- predict(mod, npf.pca.class4[i, ])$class
+}
+
+multiqda.pred.loocv[multiqda.pred.loocv == 1] <- "Ia"
+multiqda.pred.loocv[multiqda.pred.loocv == 2] <- "Ib"
+multiqda.pred.loocv[multiqda.pred.loocv == 3] <- "II"
+multiqda.pred.loocv[multiqda.pred.loocv == 4] <- "nonevent"
+
+mean(as.numeric(multiqda.pred.loocv == npf.pca.class4$class4))
+```
+
+### QDA on the npf.168.pca-dataset
+
+```{r qda multiclass 168, warning=FALSE, fig.height=4}
+
+# Use class4 instead of class2
+npf.168.pca.class4 <- npf.168.pca[, 1:12]
+npf.168.pca.class4$class4 <- npfOrig$class4
+
+multiqda.pred.loocv <- rep(0, nrow(npf.168.pca.class4))
+
+# loocv
+for (i in 1:dim(npf.168.pca.class4)[1]) {
+  mod <- qda(class4 ~ ., npf.168.pca.class4[-i, ])
+  multiqda.pred.loocv[i] <- predict(mod, npf.168.pca.class4[i, ])$class
+}
+
+multiqda.pred.loocv[multiqda.pred.loocv == 1] <- "Ia"
+multiqda.pred.loocv[multiqda.pred.loocv == 2] <- "Ib"
+multiqda.pred.loocv[multiqda.pred.loocv == 3] <- "II"
+multiqda.pred.loocv[multiqda.pred.loocv == 4] <- "nonevent"
+
+mean(as.numeric(multiqda.pred.loocv == npf.168.pca.class4$class4))
+```
 ### GLM
 ```{r glm, warning=FALSE, fig.height=4}
-mod1<-glm(class2~., npf, family=binomial(link="logit"))
-mod2<-glm(class2~., npf, family=binomial(link="probit"))
+mod1 <- glm(class2 ~ ., npf, family = binomial(link = "logit"))
+mod2 <- glm(class2 ~ ., npf, family = binomial(link = "probit"))
 plot(mod1)
-prob1<-predict(mod1, npf, type="response")
-pred1<-c()
-perp1<-c()
-for(i in 1:dim(npf)[1]){
-  if(prob1[i]>=0.5){
-    pred1<-c(pred1,1)
-  } else{
-    pred1<-c(pred1,0)
+prob1 <- predict(mod1, npf, type = "response")
+pred1 <- c()
+perp1 <- c()
+for (i in 1:dim(npf)[1]) {
+  if (prob1[i] >= 0.5) {
+    pred1 <- c(pred1, 1)
+  } else {
+    pred1 <- c(pred1, 0)
   }
-  if(npf$class2[i]==1){
-    perp1<-c(perp1,prob1[i])
-  } else{
-    perp1<-c(perp1,1-prob1[i])
+  if (npf$class2[i] == 1) {
+    perp1 <- c(perp1, prob1[i])
+  } else {
+    perp1 <- c(perp1, 1-prob1[i])
   }
 }
 ```
 
 GLM accuracy and perplexity. 
 ```{r glm res, warning=FALSE}
-mean(pred1==npf$class2)
+mean(pred1 == npf$class2)
 exp(-mean(perp1))
 ```
 
 ### Lasso / Ridge
 ```{r lasso, message=FALSE, fig.height=4}
 library(glmnet)
-mod3<-cv.glmnet(x=as.matrix(npf[,1:100]), y=npf[,101],alpha=1, family="binomial", type.measure="class")
-mod4<-cv.glmnet(x=as.matrix(npf[,1:100]), y=npf[,101],alpha=0, family="binomial", type.measure = "class")
-mod3a<-glmnet(x=as.matrix(npf[,1:100]), y=npf[,101],alpha=1, family="binomial", lambda=mod3$lambda.min)
+mod3 <- cv.glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 1, 
+                  family = "binomial", type.measure = "class")
+mod4 <- cv.glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 0, 
+                  family = "binomial", type.measure = "class")
+mod3a <- glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 1, 
+                family = "binomial", lambda = mod3$lambda.min)
 coef(mod3)
 plot(mod3a)
-plot(mod3$glmnet.fit, xvar="lambda")
-prob3a<-predict(mod3a, newx=as.matrix(npf[,1:100]), type="response")
-pred3a<-c()
-perp3a<-c()
-for(i in 1:dim(npf)[1]){
-  if(prob3a[i]>=0.5){
-    pred3a<-c(pred3a,1)
-  } else{
-    pred3a<-c(pred3a,0)
+plot(mod3$glmnet.fit, xvar = "lambda")
+prob3a <- predict(mod3a, newx = as.matrix(npf[, 1:100]), type = "response")
+pred3a <- c()
+perp3a <- c()
+for (i in 1:dim(npf)[1]) {
+  if (prob3a[i] >= 0.5) {
+    pred3a <- c(pred3a, 1)
+  } else {
+    pred3a <- c(pred3a, 0)
   }
-  if(npf$class2[i]==1){
-    perp3a<-c(perp3a,prob3a[i])
-  } else{
-    perp3a<-c(perp3a,1-prob3a[i])
+  if (npf$class2[i] == 1) {
+    perp3a <- c(perp3a, prob3a[i])
+  } else {
+    perp3a <- c(perp3a, 1-prob3a[i])
   }
 }
 ```
 
 Lasso accuracy and perplexity. 
 ```{r lasso  res, warning=FALSE}
-mean(pred3a==npf$class2)
+mean(pred3a == npf$class2)
 exp(-mean(perp3a))
 ```
 
 ```{r ridge, message=FALSE, fig.height=4}
-mod4a<-glmnet(x=as.matrix(npf[,1:100]), y=npf[,101],alpha=0, family="binomial", lambda=mod4$lambda.min)
+mod4a <- glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 0, 
+                family = "binomial", lambda = mod4$lambda.min)
 plot(mod4a)
-plot(mod4$glmnet.fit, xvar="lambda")
-prob4a<-predict(mod4a, newx=as.matrix(npf[,1:100]), type="response")
-pred4a<-c()
-perp4a<-c()
-for(i in 1:dim(npf)[1]){
-  if(prob4a[i]>=0.5){
-    pred4a<-c(pred4a,1)
-  } else{
-    pred4a<-c(pred4a,0)
+plot(mod4$glmnet.fit, xvar = "lambda")
+prob4a <- predict(mod4a, newx = as.matrix(npf[, 1:100]), type = "response")
+pred4a <- c()
+perp4a <- c()
+for (i in 1:dim(npf)[1]) {
+  if (prob4a[i] >= 0.5) {
+    pred4a <- c(pred4a, 1)
+  } else {
+    pred4a <- c(pred4a, 0)
   }
-  if(npf$class2[i]==1){
-    perp4a<-c(perp4a,prob4a[i])
-  } else{
-    perp4a<-c(perp4a,1-prob4a[i])
+  if (npf$class2[i] == 1) {
+    perp4a <- c(perp4a, prob4a[i])
+  } else {
+    perp4a <- c(perp4a, 1-prob4a[i])
   }
 }
 ```
 
 Ridge accuracy and perplexity. 
 ```{r ridge res, warning=FALSE}
-mean(pred4a==npf$class2)
+mean(pred4a == npf$class2)
 exp(-mean(perp4a))
 ```
 
 ### SVM
 ```{r svm, warning=FALSE}
-modsv<-tune(svm, class2~., data=npf.fact, kernel="linear", ranges=list(cost=c(0.001, 0.01, 0.1, 1, 2, 5)))
-modsvm<-svm(class2~., data=npf.fact, kernel="linear", scale=FALSE, cost=0.001,probability=TRUE)
-predsv<-predict(modsvm,newdata=npf.fact)
-predsv2<-predict(modsvm,newdata=npf.fact,probability = T)
-probsv<-attr(predsv2, "probabilities")
-perpsv<-c()
-for(i in 1:dim(npf)[1]){
-  if(npf$class2[i]==0){
-    perpsv<-c(perpsv, probsv[i,2])
-  } else{
-    perpsv<-c(perpsv, probsv[i,1])
+modsv <- tune(svm, class2 ~ ., data = npf.fact, kernel = "linear", 
+              ranges = list(cost = c(0.001, 0.01, 0.1, 1, 2, 5)))
+modsvm <- svm(class2 ~ ., data = npf.fact, kernel = "linear", scale = FALSE, 
+              cost = 0.001, probability = TRUE)
+predsv <- predict(modsvm, newdata = npf.fact)
+predsv2 <- predict(modsvm, newdata = npf.fact, probability = T)
+probsv <- attr(predsv2, "probabilities")
+perpsv <- c()
+for (i in 1:dim(npf)[1]) {
+  if (npf$class2[i] == 0) {
+    perpsv <- c(perpsv, probsv[i, 2])
+  } else {
+    perpsv <- c(perpsv, probsv[i, 1])
   }
 }
 ```
 SVM accuracy and perplexity. 
 ```{r SVM res, warning=FALSE}
-mean(predsv==npf$class2)
+mean(predsv == npf$class2)
 exp(-mean(log(perpsv)))
 ```
 
 ### Tree-based methods
 
-#### Errors and accuracies
-```{r treeErrors, message=FALSE, warning=FALSE}
-library(tree)
-library(MASS)
-library(randomForest) # random forest
-library(gbm) # GBM
-library (ISLR2)
-
-#'Dummy model (from week 1 problem 2)
-dummy <- function(formula, data) {
-  target <- all.vars(formula[[2]])
-  lm(as.formula(sprintf("%s ~ 1", target)), data)
-}
-
-# Models
-models <- list(
-  Dummy = dummy,
-  RandomForest = randomForest,
-  GBM = gbm
-)
-
-# gmb_pred <- predict(gbm(class2 ~ ., data = npf, cv.folds = 10, train.fraction = 0.5), data=npf)
-# print(cacc(gmb_pred, npf$class2))
-
-# Errors
-errors <- sapply(models, function(model) {
-  mod <- model(class2 ~ ., data = npf_train)
-  c(
-    c(
-      train = rmse(predict(mod, data = npf_train), npf_train$class2),
-      test = rmse(predict(mod, data = npf_test), npf_test$class2),
-      CV = rmse(cv(mod, data = npf_train), npf_train$class2),
-      LOOCV = rmse(loocv(mod, data = npf_train), npf_train$class2) 
-    )
-  )
-})
-
-# Classification accuracies
-results <- sapply(models, function(model) {
-  mod <- model(class2 ~ ., data = npf_train)
-  c(
-    c(
-      train = cacc(predict(mod, data = npf_train), npf_train$class2),
-      test = cacc(predict(mod, data = npf_test), npf_test$class2),
-      CV = cacc(cv(mod, data = npf_train), npf_train$class2),
-      LOOCV = cacc(loocv(mod, data = npf_train), npf_train$class2)
-    )
-  )
-})
-
-kable(errors,
-      caption = "Tree-based methods, errors") %>%
-  kable_styling(latex_options = "HOLD_position")
-
-kable(results,
-      caption = "Tree-based methods, classification accuracy") %>%
-  kable_styling(latex_options = "HOLD_position")
-```
 
 
-#### GBM
-```{r GBM, message=FALSE, warning=FALSE}
 
-#' Select training and test data
-idx <- sample(nrow(npf.168), nrow(npf.168)/2)
-npf_train <- npf.168[idx, ]
-npf_test <- npf.168[-idx, ]
 
-boost.npf <- gbm(class2 ~ ., data = npf_train, 
-                        distribution = "bernoulli", n.trees = 5000,
-                        interaction.depth = 4)
-summary(boost.npf)
-plot(boost.npf, i.var=c("RHIRGA168.mean", "SWS.mean", "H2O168.mean", "CS.mean"))
-```
-
-## Final models
 
 ### Lasso (first version of final model)
 ```{r lasso2}
-lasso1 <- cv.glmnet(x = as.matrix(npf[,1:100]), y = npf$class2, alpha=1, family="binomial", type.measure="class", nfolds=10)
-lassomod1 <- glmnet(x=as.matrix(npf[,1:100]),y = npf$class2, alpha = 1, lambda = lasso1$lambda.min, family="binomial", type.measure="class")
-preds<-c()
-perps<-c()
-for(i in 1:464){
-  newexp <- npf[-i,]
-  newmod <- glmnet(x=as.matrix(newexp[,1:100]), y=newexp[,101], alpha=1,family="binomial", lambda = lasso1$lambda.min)
-  newprob <- predict(newmod, newx=as.matrix(npf[i,1:100]),type="response")
+lasso1 <- cv.glmnet(x = as.matrix(npf[,1:100]), y = npf$class2, alpha = 1, 
+                    family = "binomial", type.measure = "class", nfolds = 10)
+lassomod1 <- glmnet(x = as.matrix(npf[,1:100]), y = npf$class2, alpha = 1, 
+                    lambda = lasso1$lambda.min, family = "binomial", 
+                    type.measure = "class")
+preds <- c()
+perps <- c()
+for(i in 1:464) {
+  newexp <- npf[-i, ]
+  newmod <- glmnet(x = as.matrix(newexp[, 1:100]), y = newexp[, 101], 
+                   alpha = 1, family = "binomial", lambda = lasso1$lambda.min)
+  newprob <- predict(newmod, newx = as.matrix(npf[i, 1:100]), type = "response")
   if (npf$class2[i] == 1) {
     newperp = log(newprob)
   } else {
     newperp = log(1-newprob)
   }
-  perps <- c(perps,newperp)
+  perps <- c(perps, newperp)
   if (newprob > 0.5) {
     newpred <- 1
-  } else{
+  } else {
     newpred <- 0
   }
   preds <- c(preds, newpred == npfsp$class2[i])
@@ -628,16 +920,20 @@ exp(-mean(perps))
 
 ### GLM (first version of actual model without usage of PCAs):
 ```{r glm2}
-logreg <- glm(class2~., npfsp, family=binomial())
-logreg <- glm(class2~.-O3168.mean-O3168.std, npfsp, family=binomial())
-logreg <- glm(class2~.-O3168.mean-O3168.std-PTG.mean-PTG.std, npfsp, family=binomial())
-logreg <- glm(class2~.-O3168.mean-O3168.std-PTG.mean-PTG.std-Pamb0.mean-H2O168.std-SO2168.mean-SO2168.std-1, npfsp, family=binomial())
-preds<-c()
-perps<-c()
+logreg <- glm(class2 ~ ., npfsp, family = binomial())
+logreg <- glm(class2 ~ . -O3168.mean -O3168.std, npfsp, family = binomial())
+logreg <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std, npfsp, 
+              family =binomial())
+logreg <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std -Pamb0.mean
+              -H2O168.std -SO2168.mean-SO2168.std-1, npfsp, family=binomial())
+preds <- c()
+perps <- c()
 for (i in 1:464) {
   newexp <- npfsp[-i,]
-  newmod <- glm(class2~.-O3168.mean-O3168.std-PTG.mean-PTG.std-Pamb0.mean-H2O168.std-SO2168.mean-SO2168.std-1, data=npfsp, family=binomial())
-  newprob <- predict(newmod, newdata=npfsp[i,], type="response")
+  newmod <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std -Pamb0.mean 
+                -H2O168.std -SO2168.mean -SO2168.std -1, data = npfsp, 
+                family = binomial())
+  newprob <- predict(newmod, newdata = npfsp[i, ], type = "response")
   if (npf$class2[i] == 1) {
     newperp = log(newprob)
   } else {
@@ -657,21 +953,23 @@ exp(-mean(perps))
 
 ### SVM (first version of actual model)
 ```{r svm2, eval=FALSE}
-tc <- tune.control(cross=464)
-tuner <- tune(svm.class2~., data=npf.168.fact, kernel="linear", type="C", ranges=list(cost=seq(0.01,0.05,0.01)), tunecontrol=tc)
+tc <- tune.control(cross = 464)
+tuner <- tune(svm.class2 ~ ., data = npf.168.fact, kernel = "linear", type = "C",
+              ranges = list(cost = seq(0.01, 0.05, 0.01)), tunecontrol = tc)
 bpam <- tuner$best.parameters
 preds <- c()
-perps<-c()
-for(i in 1:464){
-  newexp <- npf.168.fact[-i,]
-  newmod <- svm(class2~., newexp,kernel="linear", cost=bpam[1,1], scale=F, probability=T, type="C")
-  newprob <- predict(newmod, newdata=npf.168.fact[i,1:36], probability=T)
+perps <- c()
+for (i in 1:464) {
+  newexp <- npf.168.fact[-i, ]
+  newmod <- svm(class2 ~ ., newexp, kernel = "linear", cost = bpam[1, 1], 
+                scale = F, probability = T, type = "C")
+  newprob <- predict(newmod, newdata = npf.168.fact[i, 1:36], probability = T)
   if (class2[i] == 1) {
-    newperp <- attr(newprob, "probabilities")[1,1]
+    newperp <- attr(newprob, "probabilities")[1, 1]
   } else {
-    newperp <- attr(newprob, "probabilities")[1,2]
+    newperp <- attr(newprob, "probabilities")[1, 2]
   }
-  perps <- c(perps,log(newperp))
+  perps <- c(perps, log(newperp))
   preds <- c(preds, newprob[1])
 }
 mean((preds-1) == class2)
