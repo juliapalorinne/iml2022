@@ -493,54 +493,43 @@ knitr::kable(cbind(rbind(acc.tree, acc.tree.168), rbind(per.tree, per.tree.168))
 
 
 
+npf.168 <- data.frame(npfOrig[, (5:6)], npfOrig[, (13:16)], npfOrig[, (27:30)], 
+                      npfOrig[, (41:42)], npfOrig[, (53:54)], npfOrig[, (63:72)],
+                      npfOrig[, (83:88)], npfOrig[, (99:105)])
+
+npfsp <- npf.168[, c(1:2, 5:6, 9:10, 13:16, 19:20, 23:24, 27:30, 37)]
+
 library(randomForest)
-set.seed(1)
+set.seed(42)
 
 # Select training and test data
-idx <- sample(nrow(npf.168), nrow(npf.168)/2)
-npf_train <- npf[idx, ]
-npf_test <- npf[-idx, ]
-npf_train168 <- npf.168[idx, ]
-npf_test168 <- npf.168[-idx, ]
+idx <- sample(nrow(npfsp), nrow(npfsp)/2)
+npf_train <- npfsp[idx, ]
+npf_test <- npfsp[-idx, ]
 
 npf.RF.mod <- randomForest(class2 ~ ., data = npf_train, mtry = 12, importance = TRUE)
 npf.RF.pred <- predict(npf.RF.mod, newdata = npf_test)
-npf.RF.CV <- cv(npf.RF.mod, data = npf_test)
-npf.RF.LOOCV <- loocvRF(data = npf)
-
-npf168.RF.mod <- randomForest(class2 ~ ., data = npf_train168, mtry = 12, importance = TRUE)
-npf168.RF.pred <- predict(npf168.RF.mod, newdata = npf_test168)
-npf168.RF.CV <- cv(npf168.RF.mod, data = npf.168)
-npf168.RF.LOOCV
 
 n = nrow(npf)
 npf.RF.LOOCV <- rep(0, n)
 
 # loocv
 for (i in 1:dim(npfsp)[1]) {
-  mod <- randomForest(class2 ~ ., npfsp[-i, ], mtry = 12, importance = TRUE)
+  mod <- randomForest(class2 ~ ., npfsp[-i, ], mtry = 5, importance = TRUE)
   npf.RF.LOOCV[i] <- predict(mod, npfsp[i, ])
+  print(i)
 }
 
 accuracies <- data.frame(original = accuracy(npf.RF.pred, npf_test$class2),
-                         CV = accuracy(npf.RF.CV, npf$class2),
                          LOOCV = accuracy(npf.RF.LOOCV, npfsp$class2))
-accuracies.168 <- data.frame(original = accuracy(npf168.RF.pred, npf_test168$class2),
-                             CV = accuracy(npf168.RF.CV, npf_test168$class2),
-                             LOOCV = accuracy(npf168.RF.LOOCV, npf$class2))
 perplexities <- data.frame(original = perplexity(npf.RF.pred, npf_test$class2),
-                           CV = perplexity(npf.RF.CV, npf_test$class2),
-                           LOOCV = 0)
-perplexities.168 <- data.frame(original = perplexity(npf168.RF.pred, npf_test168$class2),
-                               CV = perplexity(npf168.RF.CV, npf_test168$class2),
-                               LOOCV = perplexity(npf168.RF.LOOCV, npf_test168$class2))
-table <- cbind(rbind(accuracies, accuracies.168), rbind(perplexities, perplexities.168))
+                           LOOCV = perplexity(npf.RF.LOOCV, npfsp$class2))
+table <- cbind(rbind(accuracies), rbind(perplexities))
 
 knitr::kable(table, digits = 3) %>%
-  add_header_above(c("Accuracy" = 3, "Perplexity" = 3)) %>%
+  add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
   kable_styling(latex_options = "HOLD_position")
 
-View(npf.RF.LOOCV)
 
 
 
@@ -549,15 +538,15 @@ MULTICLASS
 library(randomForest)
 set.seed(1)
 
-View(npf4sp)
-
 # Select training and test data
 idx <- sample(nrow(npf4sp), nrow(npf4sp)/2)
-npfsp_train <- npf4sp[idx, ]
-npfsp_test <- npf4sp[-idx, ]
+npf4sp.f <- npf4sp
+npf4sp.f$class4 <- factor(npf4sp.f$class4)
+npfsp_train <- npf4sp.f[idx, ]
+npfsp_test <- npf4sp.f[-idx, ]
 
-npf.RF.mod <- randomForest(class4 ~ ., data = npfsp_train, mtry = 5, importance = TRUE)
+npf.RF.mod <- randomForest(class4 ~ ., data = npfsp_train, mtry = 5)
 npf.RF.pred <- predict(npf.RF.mod, newdata = npfsp_test)
 
-accuracy(npf.RF.pred, npf_test$class4)
+mean(npf.RF.pred == npfsp_test$class4)
 
