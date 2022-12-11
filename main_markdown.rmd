@@ -668,6 +668,114 @@ kable(cbind(qda_acc.168.pca, qda_perp.168.pca)) %>%
   add_header_above(c("Accuracy" = 2, "Perplexity" = 2)) %>%
   kable_styling(latex_options = "HOLD_position")
 ```
+
+
+\newpage
+
+### Tree-based methods
+```{r tree, warning=FALSE, message=FALSE}
+set.seed(68)
+library(tree)
+library(ISLR2)
+idx1 <- sample(nrow(npf.fact), nrow(npf.fact)/2)
+npf.fact.train <- npf.fact[idx1, ]
+npf.fact.test <- npf.fact[-idx1, ]
+idx2 <- sample(nrow(npf.168.fact), nrow(npf.168.fact)/2)
+npf.168.fact.train <- npf.168.fact[idx2, ]
+npf.168.fact.test <- npf.168.fact[-idx2, ]
+
+tree.train.fact <- tree(class2 ~ ., npf.fact.train)
+summary(tree.train.fact)
+tree.train.168.fact <- tree(class2 ~ ., npf.168.fact.train)
+summary(tree.train.168.fact)
+
+par(mfrow = c(1, 2))
+plot(tree.train.fact)
+plot(tree.train.168.fact)
+
+prune.train.fact <- prune.misclass(tree.train.fact, best = 8)
+prune.train.168.fact <- prune.misclass(tree.train.168.fact, best = 8)
+par(mfrow = c(1, 2))
+plot(prune.train.fact)
+plot(prune.train.168.fact)
+
+tree.pred.fact <- predict(prune.train.fact, npf.fact.test)
+tree.pred.168.fact <- predict(prune.train.168.fact, npf.168.fact.test)
+LOOCV.tree = loocv(prune.train.fact, data = npf.fact.test)
+LOOCV.168.tree = loocv(prune.train.168.fact, data = npf.168.fact.test)
+CV.tree <- cv(prune.train.fact, data = npf.fact.test)
+CV.168.tree = cv(prune.train.168.fact, data = npf.168.fact.test)
+
+acc.tree <- data.frame(original = mean(tree.pred.fact == npf.fact.test$class2),
+                           CV = mean(CV.tree == npf.fact.test$class2),
+                           LOOCV = mean(LOOCV.tree == npf.fact.test$class2))
+acc.tree.168 <- data.frame(original = mean(tree.pred.168.fact == npf.168.fact.test$class2),
+                           CV = mean(CV.168.tree == npf.168.fact.test$class2),
+                           LOOCV = mean(LOOCV.168.tree == npf.168.fact.test$class2))
+per.tree <- data.frame(original = perplexity(tree.pred.fact, npf.fact.test$class2),
+                           CV = perplexity(CV.tree, npf.fact.test$class2),
+                           LOOCV = perplexity(LOOCV.tree, npf.fact.test$class2))
+per.tree.168 <- data.frame(original = perplexity(tree.pred.168.fact, npf.168.fact.test$class2),
+                           CV = perplexity(CV.168.tree, npf.168.fact.test$class2),
+                           LOOCV = perplexity(LOOCV.168.tree, npf.168.fact.test$class2))
+
+
+kable(cbind(rbind(acc.tree, acc.tree.168), rbind(per.tree, per.tree.168))) %>%
+  add_header_above(c("Accuracy" = 3, "Perplexity" = 3)) %>%
+  kable_styling(latex_options = "HOLD_position")
+```
+
+
+Random forest tested with original and 168 dataset, and accuracies and perplexities reported.
+Why is mtry 12?
+
+```{r randomForest, warning=FALSE, message=FALSE}
+library(randomForest)
+set.seed(1)
+
+# Select training and test data
+idx <- sample(nrow(npf.168), nrow(npf.168)/2)
+npf_train <- npf[idx, ]
+npf_test <- npf[-idx, ]
+npf_train168 <- npf.168[idx, ]
+npf_test168 <- npf.168[-idx, ]
+
+npf.RF.mod <- randomForest(class2 ~ ., data = npf_train, mtry = 12, importance = TRUE)
+npf.RF.pred <- predict(npf.RF.mod, newdata = npf_test)
+npf.RF.CV <- cv(npf.RF.mod, data = npf_test)
+npf.RF.LOOCV <- loocv(npf.RF.mod, data = npf_test)
+
+npf168.RF.mod <- randomForest(class2 ~ ., data = npf_train168, mtry = 12, importance = TRUE)
+npf168.RF.pred <- predict(npf168.RF.mod, newdata = npf_test168)
+npf168.RF.CV <- cv(npf168.RF.mod, data = npf_test168)
+npf168.RF.LOOCV <- loocv(npf168.RF.mod, data = npf_test168)
+
+yhat.RF <- predict(npf.RF.mod, newdata = npf_test)
+plot(yhat.RF, npf_test$class2)
+
+accuracies <- data.frame(original = accuracy(npf.RF.pred, npf_test$class2),
+                           CV = accuracy(npf.RF.CV, npf_test$class2),
+                           LOOCV = 0)
+accuracies.168 <- data.frame(original = accuracy(npf168.RF.pred, npf_test168$class2),
+                           CV = accuracy(npf168.RF.CV, npf_test168$class2),
+                           LOOCV = accuracy(npf168.RF.LOOCV, npf_test168$class2))
+perplexities <- data.frame(original = perplexity(npf.RF.pred, npf_test$class2),
+                           CV = perplexity(npf.RF.CV, npf_test$class2),
+                           LOOCV = 0)
+perplexities.168 <- data.frame(original = perplexity(npf168.RF.pred, npf_test168$class2),
+                           CV = perplexity(npf168.RF.CV, npf_test168$class2),
+                           LOOCV = perplexity(npf168.RF.LOOCV, npf_test168$class2))
+table <- cbind(rbind(accuracies, accuracies.168), rbind(perplexities, perplexities.168))
+
+knitr::kable(table, digits = 3) %>%
+  add_header_above(c("Accuracy" = 3, "Perplexity" = 3)) %>%
+  kable_styling(latex_options = "HOLD_position")
+
+```
+
+
+\newpage
+
 ## Multiple classes
 
 ### Naive Bayes on the npf-dataset
@@ -880,12 +988,6 @@ mean(predsv == npf$class2)
 exp(-mean(log(perpsv)))
 ```
 
-### Tree-based methods
-
-
-
-
-
 
 ### Lasso (first version of final model)
 ```{r lasso2}
@@ -923,7 +1025,7 @@ exp(-mean(perps))
 logreg <- glm(class2 ~ ., npfsp, family = binomial())
 logreg <- glm(class2 ~ . -O3168.mean -O3168.std, npfsp, family = binomial())
 logreg <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std, npfsp, 
-              family =binomial())
+              family = binomial())
 logreg <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std -Pamb0.mean
               -H2O168.std -SO2168.mean-SO2168.std-1, npfsp, family=binomial())
 preds <- c()

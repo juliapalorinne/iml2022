@@ -1,0 +1,412 @@
+---
+title: "IML Term project"
+author: "Julia Palorinne, Pyry Silomaa, Sara Sippola"
+output: pdf_document
+date: '`r format(Sys.Date(), "%d.%m.%Y")`'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(kableExtra)
+```
+
+```{r load data}
+npfOrig <- read.csv("npf_train.csv")
+npfOrig$class2 <- ifelse(npfOrig$class4 == "nonevent", 0, 1)
+rownames(npfOrig) <- npfOrig[, "date"]
+npf.168 <- data.frame(npfOrig[, (5:6)], npfOrig[, (13:16)], npfOrig[, (27:30)], 
+                  npfOrig[, (41:42)], npfOrig[, (53:54)], npfOrig[, (63:72)],
+                  npfOrig[, (83:88)], npfOrig[, (99:105)])
+
+npfsp <- npf.168[, c(1:2, 5:6, 9:10, 13:16, 19:20, 23:24, 27:30, 37)]
+colnames(npfsp)
+npfsp.fact <- npfsp
+npfsp.fact[, 19] <- as.factor(npfsp.fact[, 19])
+
+npf4<-npfOrig[,-c(1,2,4)]
+npf4.168 <- data.frame(npf4[, (1:3)], npf4[, (10:13)], npf4[, (24:27)], 
+                       npf4[, (38:39)], npf4[, (50:51)], npf4[, (60:69)],
+                       npf4[, (80:85)], npf4[, (96:101)])
+npf4sp<-npf4.168[,c(1,2:3,6:7,10:11,14:17,20:21,24:25,28:31)]
+```
+
+```{r functions}
+## Accuracy
+accuracy <- function(pred, y) mean(ifelse(pred >= 0.5, 1, 0) == y)
+
+## Perplexity
+## Force probabilities to [0.995, 0.005]
+perplexity <- function(pred, y) {
+  pred <- ifelse(pred != 0 & pred != 1, pred, ifelse(pred == 0, 0.005, 0.995 ))
+  exp(-mean(log(ifelse(y == 1, pred, 1 - pred)))) 
+}
+
+# Cross-validate
+# Split n items into k folds of roughly equal size
+kpart <- function(n, k) {
+    rep_len(1:k, length.out = n)
+}
+
+# Cross-validation predictor (from week 1 problem 2)
+cv <- function(
+    formula, # variables to use
+    data, # data
+    model = lm, # model to train
+    n = nrow(data), # rows in the matrix
+    k = min(n, 10), # cross-validation folds
+    split = kpart(n, k), # the split of n data items into k folds
+    train = function(data) model(formula, data = data),
+    pred = function(model, data) predict(model, newdata = data)) {
+  yhat <- NULL
+  for (i in 1:k) {
+    mod <- train(data[split != i, ])
+    if (is.null(yhat)) {
+      yhat <- pred(mod, data)
+    } else {
+      yhat[split == i] <- pred(mod, data[split == i, ])
+    }
+  }
+  return(yhat)
+}
+
+loocv <- function(
+    formula, # Formula specifying which variables to use
+    data, # Dataset
+    model = lm, # Type of model to train (as a function)
+    ## function to train a model on data
+    train = function(data) model(formula, data = data),
+    ## function to make predictions on the trained model
+    pred = function(model, data) predict(model, newdata = data)) {
+  yhat <- NULL
+  for (i in 1:nrow(data)) {
+    ## go through all stations, train on other stations, and make a prediction
+    mod <- train(data[-i, ])
+    if (is.null(yhat)) {
+      ## initialise yhat to something of correct data type,
+      yhat <- pred(mod, data)
+    } else {
+      yhat[i] <- pred(mod, data[i, ])
+    }
+  }
+  yhat # finally, output cross-validation predictions
+}
+
+# Find cross-validation predictions, return probabilities and not the classification
+cv.prob <- function(
+               formula, # Formula specifying which variables to use
+               data, # Dataset
+               model = lm, # Type of model to train (as a function)
+               n = nrow(data), # number of rows in the data matrix
+               k = min(n, 10), # number of cross-validation folds
+               split = kpart(n, k), # the split of n data items into k folds
+               ## function to train a model on data
+               train = function(data) model(formula, data = data),
+               ## function to make predictions on the trained model
+               pred = function(model, data) 
+                 predict(model, newdata = data, type = "raw")[,2]) {
+    yhat <- NULL
+    for (i in 1:k) {
+        ## go through all folds, train on other folds, and make a prediction
+        mod <- train(data[split != i, ])
+        if (is.null(yhat)) {
+            ## initialise yhat to something of correct data type,
+            yhat <- pred(mod, data)
+        } else {
+            yhat[split == i] <- pred(mod, data[split == i, ])
+        }
+    }
+    yhat # finally, output cross-validation predictions
+}
+
+loocv.prob <- function(
+               formula, # Formula specifying which variables to use
+               data, # Dataset
+               model = lm, # Type of model to train (as a function)
+               ## function to train a model on data
+               train = function(data) model(formula, data = data),
+               ## function to make predictions on the trained model
+               pred = function(model, data) 
+                 predict(model, newdata = data, type = "raw")[,2]) {
+    yhat <- NULL
+    for (i in 1:nrow(data)) {
+        ## go through all stations, train on other stations, and make a prediction
+        mod <- train(data[-i, ])
+        if (is.null(yhat)) {
+            ## initialise yhat to something of correct data type,
+            yhat <- pred(mod, data)
+        } else {
+            yhat[i] <- pred(mod, data[i, ])
+        }
+    }
+    yhat # finally, output cross-validation predictions
+}
+```
+
+
+## Multiple classes
+### GLM
+```{r glm, warning=FALSE, fig.height=4}
+mod1 <- glm(class2 ~ ., npf, family = binomial(link = "logit"))
+mod2 <- glm(class2 ~ ., npf, family = binomial(link = "probit"))
+plot(mod1)
+prob1 <- predict(mod1, npf, type = "response")
+pred1 <- c()
+perp1 <- c()
+for (i in 1:dim(npf)[1]) {
+  if (prob1[i] >= 0.5) {
+    pred1 <- c(pred1, 1)
+  } else {
+    pred1 <- c(pred1, 0)
+  }
+  if (npf$class2[i] == 1) {
+    perp1 <- c(perp1, prob1[i])
+  } else {
+    perp1 <- c(perp1, 1-prob1[i])
+  }
+}
+```
+
+GLM accuracy and perplexity. 
+```{r glm res, warning=FALSE}
+mean(pred1 == npf$class2)
+exp(-mean(perp1))
+```
+
+### Lasso / Ridge
+```{r lasso, message=FALSE, fig.height=4}
+library(glmnet)
+mod3 <- cv.glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 1, 
+                  family = "binomial", type.measure = "class")
+mod4 <- cv.glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 0, 
+                  family = "binomial", type.measure = "class")
+mod3a <- glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 1, 
+                family = "binomial", lambda = mod3$lambda.min)
+coef(mod3)
+plot(mod3a)
+plot(mod3$glmnet.fit, xvar = "lambda")
+prob3a <- predict(mod3a, newx = as.matrix(npf[, 1:100]), type = "response")
+pred3a <- c()
+perp3a <- c()
+for (i in 1:dim(npf)[1]) {
+  if (prob3a[i] >= 0.5) {
+    pred3a <- c(pred3a, 1)
+  } else {
+    pred3a <- c(pred3a, 0)
+  }
+  if (npf$class2[i] == 1) {
+    perp3a <- c(perp3a, prob3a[i])
+  } else {
+    perp3a <- c(perp3a, 1-prob3a[i])
+  }
+}
+```
+
+Lasso accuracy and perplexity. 
+```{r lasso  res, warning=FALSE}
+mean(pred3a == npf$class2)
+exp(-mean(perp3a))
+```
+
+```{r ridge, message=FALSE, fig.height=4}
+mod4a <- glmnet(x = as.matrix(npf[, 1:100]), y = npf[, 101], alpha = 0, 
+                family = "binomial", lambda = mod4$lambda.min)
+plot(mod4a)
+plot(mod4$glmnet.fit, xvar = "lambda")
+prob4a <- predict(mod4a, newx = as.matrix(npf[, 1:100]), type = "response")
+pred4a <- c()
+perp4a <- c()
+for (i in 1:dim(npf)[1]) {
+  if (prob4a[i] >= 0.5) {
+    pred4a <- c(pred4a, 1)
+  } else {
+    pred4a <- c(pred4a, 0)
+  }
+  if (npf$class2[i] == 1) {
+    perp4a <- c(perp4a, prob4a[i])
+  } else {
+    perp4a <- c(perp4a, 1-prob4a[i])
+  }
+}
+```
+
+Ridge accuracy and perplexity. 
+```{r ridge res, warning=FALSE}
+mean(pred4a == npf$class2)
+exp(-mean(perp4a))
+```
+
+### SVM
+```{r svm, warning=FALSE}
+modsv <- tune(svm, class2 ~ ., data = npf.fact, kernel = "linear", 
+              ranges = list(cost = c(0.001, 0.01, 0.1, 1, 2, 5)))
+modsvm <- svm(class2 ~ ., data = npf.fact, kernel = "linear", scale = FALSE, 
+              cost = 0.001, probability = TRUE)
+predsv <- predict(modsvm, newdata = npf.fact)
+predsv2 <- predict(modsvm, newdata = npf.fact, probability = T)
+probsv <- attr(predsv2, "probabilities")
+perpsv <- c()
+for (i in 1:dim(npf)[1]) {
+  if (npf$class2[i] == 0) {
+    perpsv <- c(perpsv, probsv[i, 2])
+  } else {
+    perpsv <- c(perpsv, probsv[i, 1])
+  }
+}
+```
+SVM accuracy and perplexity. 
+```{r SVM res, warning=FALSE}
+mean(predsv == npf$class2)
+exp(-mean(log(perpsv)))
+```
+
+
+### Lasso (first version of final model)
+```{r lasso2}
+lasso1 <- cv.glmnet(x = as.matrix(npf[,1:100]), y = npf$class2, alpha = 1, 
+                    family = "binomial", type.measure = "class", nfolds = 10)
+lassomod1 <- glmnet(x = as.matrix(npf[,1:100]), y = npf$class2, alpha = 1, 
+                    lambda = lasso1$lambda.min, family = "binomial", 
+                    type.measure = "class")
+preds <- c()
+perps <- c()
+for(i in 1:464) {
+  newexp <- npf[-i, ]
+  newmod <- glmnet(x = as.matrix(newexp[, 1:100]), y = newexp[, 101], 
+                   alpha = 1, family = "binomial", lambda = lasso1$lambda.min)
+  newprob <- predict(newmod, newx = as.matrix(npf[i, 1:100]), type = "response")
+  if (npf$class2[i] == 1) {
+    newperp = log(newprob)
+  } else {
+    newperp = log(1-newprob)
+  }
+  perps <- c(perps, newperp)
+  if (newprob > 0.5) {
+    newpred <- 1
+  } else {
+    newpred <- 0
+  }
+  preds <- c(preds, newpred == npfsp$class2[i])
+}
+mean(preds == npf$class2)
+exp(-mean(perps))
+```
+
+### GLM (first version of actual model without usage of PCAs):
+```{r glm2}
+logreg <- glm(class2 ~ ., npfsp, family = binomial())
+logreg <- glm(class2 ~ . -O3168.mean -O3168.std, npfsp, family = binomial())
+logreg <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std, npfsp, 
+              family = binomial())
+logreg <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std -Pamb0.mean
+              -H2O168.std -SO2168.mean-SO2168.std-1, npfsp, family=binomial())
+preds <- c()
+perps <- c()
+for (i in 1:464) {
+  newexp <- npfsp[-i,]
+  newmod <- glm(class2 ~ . -O3168.mean -O3168.std -PTG.mean -PTG.std -Pamb0.mean 
+                -H2O168.std -SO2168.mean -SO2168.std -1, data = npfsp, 
+                family = binomial())
+  newprob <- predict(newmod, newdata = npfsp[i, ], type = "response")
+  if (npf$class2[i] == 1) {
+    newperp = log(newprob)
+  } else {
+    newperp = log(1-newprob)
+  }
+  perps <- c(perps,newperp)
+  if (newprob > 0.5) {
+    newpred <- 1
+  } else {
+    newpred <- 0
+  }
+  preds <- c(preds, newpred == npfsp$class2[i])
+}
+mean(preds)
+exp(-mean(perps))
+```
+
+### SVM (first version of actual model)
+```{r svm2, eval=FALSE}
+tc <- tune.control(cross = 464)
+tuner <- tune(svm.class2 ~ ., data = npf.168.fact, kernel = "linear", type = "C",
+              ranges = list(cost = seq(0.01, 0.05, 0.01)), tunecontrol = tc)
+bpam <- tuner$best.parameters
+preds <- c()
+perps <- c()
+for (i in 1:464) {
+  newexp <- npf.168.fact[-i, ]
+  newmod <- svm(class2 ~ ., newexp, kernel = "linear", cost = bpam[1, 1], 
+                scale = F, probability = T, type = "C")
+  newprob <- predict(newmod, newdata = npf.168.fact[i, 1:36], probability = T)
+  if (class2[i] == 1) {
+    newperp <- attr(newprob, "probabilities")[1, 1]
+  } else {
+    newperp <- attr(newprob, "probabilities")[1, 2]
+  }
+  perps <- c(perps, log(newperp))
+  preds <- c(preds, newprob[1])
+}
+mean((preds-1) == class2)
+exp(-mean(perps))
+```
+
+
+Logistinen regressio, 2 luokkaa
+```{r}
+logreg<-glm(class2~., npfsp, family=binomial())
+logreg<-glm(class2~.-O3168.mean-O3168.std, npfsp, family=binomial())
+logreg<-glm(class2~.-O3168.mean-O3168.std-PTG.mean-PTG.std, npfsp, family=binomial())
+logreg<-glm(class2~.-O3168.mean-O3168.std-PTG.mean-PTG.std-Pamb0.mean-H2O168.std-SO2168.mean-SO2168.std-1, npfsp, family=binomial())
+predsc2<-c()
+perpsc2<-c()
+for(i in 1:464){
+  newexp<-npfsp[-i,]
+  newmod<-glm(class2~.-O3168.mean-O3168.std-PTG.mean-PTG.std-Pamb0.mean-H2O168.std-SO2168.mean-SO2168.std-1, data=npfsp, family=binomial())
+  newprob<-predict(newmod, newdata=npfsp[i,],type="response")
+  if(npfsp$class2[i]==1){
+    newperp=log(newprob)
+  } else{
+    newperp=log(1-newprob)
+  }
+  perpsc2<-c(perpsc2,newperp)
+  if(newprob>0.5){
+    newpred<-1
+  } else{
+    newpred<-0
+  }
+  predsc2<-c(predsc2, newpred)
+}
+mean(preds)
+exp(-mean(perps))
+```
+
+Logistinen regressio, 4 luokkaa
+```{r}
+preds<-c()
+perps<-c()
+npf4sp$class4<-relevel(npf4sp$class4, ref="nonevent")
+multmod<-multinom(class4~., npf4sp)
+for(i in 1:464){
+  newtrain<-npf4sp[-i,]
+  newval<-npf4sp[i,]
+  newmod<-invisible(multinom(class4~., newtrain))
+  probs<-predict(newmod, newval, type="probs")
+  if(probs[1]==max(probs)){
+    preds<-c(preds,"nonevent")
+  } else if (probs[2]==max(probs)){
+    preds<-c(preds,"Ia")
+  } else if (probs[3]==max(probs)){
+    preds<-c(preds,"Ib")
+  } else{
+    preds<-c(preds,"II")
+  }
+  if(npf4sp$class4[i]=="nonevent"){
+    perps<-c(perps, log(probs[1]))
+  } else if (npf4sp$class4[i]=="Ia"){
+    perps<-c(perps, log(probs[2]))
+  } else if (npf4sp$class4[i]=="Ib"){
+    perps<-c(perps, log(probs[3]))
+  } else {
+    perps<-c(perps, log(probs[4]))
+  }
+}
+```
