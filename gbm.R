@@ -22,8 +22,12 @@ idx <- sample(nrow(npfsp.fact), nrow(npfsp.fact)/2)
 npf_train <- npfsp[idx, ]
 npf_test <- npfsp[-idx, ]
 
-gbm.mod <- gbm(class2 ~ ., data=npf_train, distribution = "bernoulli", n.trees = 5000)
-gbm.pred <- predict(gbm.mod, newdata=npf_test, n.trees = 100, type = "response")
+npf_test <- read.csv("npf_test.csv")
+npf_test$class2 <- ifelse(npf_test$class4 == "nonevent", 0, 1)
+rownames(npf_test) <- npf_test[, "date"]
+
+gbm.mod <- gbm(class2 ~ ., data = npf_train, distribution = "bernoulli", n.trees = 5000)
+gbm.pred <- predict(gbm.mod, newdata = npf_test, n.trees = 100, type = "response")
 
 gbm.pred
 
@@ -32,8 +36,8 @@ npf.gbm.LOOCV <- rep(0, n)
 
 # loocv
 for (i in 1:dim(npfsp)[1]) {
-  mod <- gbm(class2 ~ ., data=npf_train, distribution = "bernoulli", n.trees = 5000)
-  npf.gbm.LOOCV[i] <- predict(mod, npfsp[i, ], n.trees = 5000, type = "response")
+  mod <- gbm(class2 ~ ., data = npf_train, distribution = "bernoulli", n.trees = 5000)
+  npf.gbm.LOOCV[i] <- predict(mod, npfsp[i, ], n.trees = 200, type = "response")
   print(i)
 }
 
@@ -50,6 +54,19 @@ knitr::kable(table, digits = 3) %>%
 
 
 
+# Select training and test data
+idx <- sample(nrow(npf4sp), nrow(npf4sp)/2)
+npf4sp.f <- npf4sp
+npf4sp.f$class4 <- factor(npf4sp.f$class4)
+npfsp_train <- npf4sp.f[idx, ]
+npfsp_test <- npf4sp.f[-idx, ]
+
+gbm4.mod <- gbm(class4 ~ ., data=npfsp_train, distribution = "multinomial", n.trees = 10000)
+gbm4.pred <- predict(gbm4.mod, npfsp_test, n.trees = 5000, type = "response")
+
+gbm4.pred 
+
+mean(npf.RF.pred == npfsp_test$class4)
 
 accuracy <- function(pred, y) mean(ifelse(pred >= 0.5, 1, 0) == y)
 accuracy(gbm.pred, npf_test$class2)
