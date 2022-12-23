@@ -291,7 +291,7 @@ kable(cmData[startsWith(colnames(cmData), "H2O") & endsWith(colnames(cmData), ".
   kable_styling(latex_options = "HOLD_position")
 ``` 
 
-Hence we discard most of the measurements of H2O and other variables for which we have multiple highly correlating measurements, both the means and the standard deviations. We keep the parameters measured at 16.8 meters as for some parameters, the measurements have only been measured at that height. This rather crude method of discarding data leaves us with 38 unique columns. The figure below describes the correlation coefficients between the remaining variables
+Hence we discard most of the measurements of H2O and other variables for which we have multiple highly correlating measurements, both the means and the standard deviations. We keep the parameters measured at 16.8 meters as for some parameters, the measurements have only been measured at that height. This rather crude method of discarding data leaves us with 36 unique columns. The figure below describes the correlation coefficients between the remaining variables
 
 ```{r correlation plot 168, echo=FALSE, fig.dim=c(6, 6)}
 # Select global and 16.8 m high values for correlation plot
