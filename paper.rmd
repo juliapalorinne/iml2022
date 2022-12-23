@@ -255,7 +255,7 @@ for(i in 100:101){
 }
 ```
 
-In particular we notice that with several of the variables the boxplots for the nonevent group observations differ more from the observations for days with NPF events than the boxplots for the different NPF event groups both in terms of smaller or higher values but also spanning larger intervals (although this can partially be caused by there being observations within this group). Another notable thing is that the measurements of the same variables at different heights behave very similarly, which imply correlation between them (we take a more detailed look into this in the section *Correlation between parameters*). While looking at similar visualizations of other variables, we noticed a few interesting sets of variables such as nitrogen monoxide (measurements NO), potential temperature gradient (measurements PTG), rain indicator signal (measurements SWS), sulphur dioxide concentration (measurements SO2) and (measurements CS), which seem to mostly have very small standard deviations. This would imply that the shifts during the day in relation to the corresponding mean observations are on average very small.
+In particular we notice that with several of the variables the boxplots for the nonevent group observations differ more from the observations for days with NPF events than the boxplots for the different NPF event groups both in terms of smaller or higher values but also spanning larger intervals (although this can partially be caused by there being observations within this group). Another notable thing is that the measurements of the same variables at different heights behave very similarly, which imply correlation between them (we take a more detailed look into this in the section *Correlation between variables*). While looking at similar visualizations of other variables, we noticed a few interesting sets of variables such as nitrogen monoxide (measurements NO), potential temperature gradient (measurements PTG), rain indicator signal (measurements SWS), sulphur dioxide concentration (measurements SO2) and (measurements CS), which seem to mostly have very small standard deviations. This would imply that the shifts during the day in relation to the corresponding mean observations are on average very small.
 
 ## Correlation
 
@@ -423,7 +423,7 @@ We tried some tree-based models, but didn't have time to finish any of them befo
 
 #### Random Forest \
 
-One often used tree-based classification method is called Random Forest. It is based on the process described above, but only a random subset of the features is considered at each split of the tree. This is repeated multiple times and in the end, the obtained forest is evaluated and the best splits at each point are found. For Random Forest classifier, we used the R package randomForest[@randomForest].
+One often used tree-based classification method is called Random Forest. It is based on the process described above, but only a random subset of the features is considered at each split of the tree. This is repeated multiple times and in the end, the obtained forest is evaluated and the best splits at each point are found. For Random Forest classifier, we used the R package randomForest[@RandomForest].
 
 We tried the model with different parameters and with both the full dataset and the dataset with 36 variables, of which the model with all the variables performed a little better. We used that model as our Random Forest classifier in the comparison.
 
